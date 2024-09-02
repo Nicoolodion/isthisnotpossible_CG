@@ -8,7 +8,8 @@ config();
 const gamesReviewsCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
-        if (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '')) {
+        const expectedAdminUserId = process.env.expection_admin_userID;
+        if (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '') && interaction.user.id !== expectedAdminUserId) {
             await interaction.reply({ content: "You don't have permission to use this command.", ephemeral: true });
             return;
         }

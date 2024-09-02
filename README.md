@@ -120,6 +120,8 @@ Happy coding!
 - [x] Upload to GitHub
 - [x] Detect Duplicates and still has a force add
 - [x] clean up and improve security -- Very Important
-- [ ] Add a moderation system (like force remove and force admin specific users)
+- [~] Add a moderation system (like force remove and force admin specific users) - Partly added in a janky way. Only admin privileges possible in a badly coded way
 - [ ] simplify the commands?
 - [ ] fix "undefined" showing up when force adding new-games.add
+- [ ] Add logs
+
