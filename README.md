@@ -111,6 +111,6 @@ Happy coding!
 - [x] clean up and improve security -- Very Important
 - [~] Add a moderation system (like force remove and force admin specific users) - Partly added in a janky way. Only admin privileges possible in a badly coded way
 - [ ] simplify the commands?
-- [ ] fix "undefined" showing up when force adding new-games.add
+- [x] fix "undefined" showing up when force adding new-games.add
 - [ ] Add logs
 

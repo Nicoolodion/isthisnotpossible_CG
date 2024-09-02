@@ -29,7 +29,7 @@ const newGamesAddCommand = {
                 .addComponents(overrideButton);
 
             await interaction.reply({
-                content: `The game \`${gameName}\` is already on the list. Reason provided: \`${reason}\`.`,
+                content: `The game \`${gameName}\` is already on the list. Reason provided: \`${reason || 'No reason provided'}\`.` ,
                 components: [row],
                 ephemeral: true
             });
