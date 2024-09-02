@@ -1,0 +1,12 @@
+[
+    {
+      "name": "Fortnite",
+      "cracked": false,
+      "reason": "Online only"
+    },
+    {
+      "name": "Cyberpunk",
+      "cracked": true,
+      "reason": null
+    }
+  ]
