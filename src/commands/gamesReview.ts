@@ -1,18 +1,19 @@
+import { config } from 'dotenv';
 import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, ComponentType } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
-import config from '../../config.json';
+
+config();
 
 const gamesReviewsCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
-        if (!checkPermissions(userRoles, config.roles.admin) && !checkPermissions(userRoles, config.roles.uploader)) {
+        if (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '')) {
             await interaction.reply({ content: "You don't have permission to use this command.", ephemeral: true });
             return;
         }
 
         const pendingGames = readJsonFile('pending-games.json');
-        console.log('Pending games:', pendingGames);  // Debugging statement
 
         if (pendingGames.length === 0) {
             await interaction.reply({ content: "There are no pending games to review.", ephemeral: true });

@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
-const config_json_1 = __importDefault(require("../config.json"));
 const gamesAvailable_1 = __importDefault(require("./commands/gamesAvailable"));
 const newGamesAdd_1 = __importDefault(require("./commands/newGamesAdd"));
 const newGames_1 = __importDefault(require("./commands/newGames"));
 const gamesReview_1 = __importDefault(require("./commands/gamesReview"));
+(0, dotenv_1.config)();
 const client = new discord_js_1.Client({
     intents: [
         discord_js_1.GatewayIntentBits.Guilds, // This is usually the only intent needed for interaction commands
@@ -84,7 +85,7 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
             options: []
         }
     ];
-    const rest = new discord_js_1.REST({ version: '10' }).setToken(config_json_1.default.token);
+    const rest = new discord_js_1.REST({ version: '10' }).setToken(process.env.discord_bot_token);
     try {
         console.log('Started refreshing application (/) commands.');
         yield rest.put(discord_js_1.Routes.applicationCommands(((_a = client.user) === null || _a === void 0 ? void 0 : _a.id) || ''), { body: commands });
@@ -120,4 +121,4 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         yield gamesReview_1.default.handleInteraction(interaction);
     }
 }));
-client.login(config_json_1.default.token);
+client.login(process.env.discord_bot_token);

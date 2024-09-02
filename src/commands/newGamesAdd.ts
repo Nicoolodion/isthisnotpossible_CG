@@ -1,12 +1,14 @@
+import { config } from 'dotenv';
 import { CommandInteraction, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
-import config from '../../config.json';
+
+config();
 
 const newGamesAddCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
-        if (!checkPermissions(userRoles, config.roles.uploader) && !checkPermissions(userRoles, config.roles.admin)) {
+        if (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '')) {
             await interaction.reply({ content: "You don't have permission to use this command.", ephemeral: true });
             return;
         }

@@ -1,12 +1,14 @@
+import { config } from 'dotenv';
 import { CommandInteraction } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { searchGames } from '../utils/gameUtils';
-import config from '../../config.json';
+
+config();
 
 const gamesAvailableCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
-        if (!checkPermissions(userRoles, config.roles.team)) {
+        if (!checkPermissions(userRoles, process.env.team ?? '')) {
             await interaction.reply({ content: "You don't have permission to use this command.", ephemeral: true });
             return;
         }

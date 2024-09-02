@@ -1,9 +1,11 @@
+import { config } from 'dotenv';
 import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
-import config from '../config.json';
 import gamesAvailableCommand from './commands/gamesAvailable';
 import newGamesAddCommand from './commands/newGamesAdd';
 import newGamesCommand from './commands/newGames';
 import gamesReviewsCommand from './commands/gamesReview';
+
+config();
 
 const client = new Client({
     intents: [
@@ -73,7 +75,7 @@ client.once('ready', async () => {
         }
     ];
 
-    const rest = new REST({ version: '10' }).setToken(config.token);
+    const rest = new REST({ version: '10' }).setToken(process.env.discord_bot_token!);
 
     try {
         console.log('Started refreshing application (/) commands.');
@@ -111,4 +113,4 @@ client.on('interactionCreate', async interaction => {
 });
 
 
-client.login(config.token);
+client.login(process.env.discord_bot_token);

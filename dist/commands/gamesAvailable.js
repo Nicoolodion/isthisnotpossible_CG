@@ -8,22 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = require("dotenv");
 const permissions_1 = require("../utils/permissions");
 const gameUtils_1 = require("../utils/gameUtils");
-const config_json_1 = __importDefault(require("../../config.json"));
+(0, dotenv_1.config)();
 const gamesAvailableCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a, _b;
+        var _a, _b, _c;
         const userRoles = (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.roles;
-        if (!(0, permissions_1.checkPermissions)(userRoles, config_json_1.default.roles.team)) {
+        if (!(0, permissions_1.checkPermissions)(userRoles, (_b = process.env.team) !== null && _b !== void 0 ? _b : '')) {
             yield interaction.reply({ content: "You don't have permission to use this command.", ephemeral: true });
             return;
         }
-        const gameName = (_b = interaction.options.get('name')) === null || _b === void 0 ? void 0 : _b.value;
+        const gameName = (_c = interaction.options.get('name')) === null || _c === void 0 ? void 0 : _c.value;
         if (!gameName) {
             yield interaction.reply({ content: "Please provide a game name.", ephemeral: true });
             return;
