@@ -55,9 +55,12 @@ const showID = process.env.show_ID === 'true';
 client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     console.log('Bot is online!');
-    const commands = [
-        {
-            name: 'games-available',
+    const commands = [];
+    const userRoles = client.guilds.cache.first().members.cache.get(client.user.id).roles;
+    // TODO: Clean this Up?
+    if (true) {
+        commands.push({
+            name: 'request-blacklist-info',
             description: 'Check if a game can be cracked',
             options: [
                 {
@@ -67,26 +70,7 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
                     required: true,
                 }
             ]
-        },
-        {
-            name: 'new-games-add',
-            description: 'Add a new game to the list',
-            options: [
-                {
-                    name: 'name',
-                    type: 3, // String
-                    description: 'Name of the game',
-                    required: true,
-                },
-                {
-                    name: 'reason',
-                    type: 3, // String
-                    description: 'Reason why the game can\'t be cracked',
-                    required: false,
-                }
-            ]
-        },
-        {
+        }, {
             name: 'new-games',
             description: 'Submit a game for review',
             options: [
@@ -103,13 +87,32 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
                     required: false,
                 }
             ]
-        },
-        {
-            name: 'games-reviews',
+        });
+    }
+    if (true) {
+        commands.push({
+            name: 'review-games',
             description: 'Review pending games',
             options: []
-        }
-    ];
+        }, {
+            name: 'new-games-add',
+            description: 'Add a new game to the list',
+            options: [
+                {
+                    name: 'name',
+                    type: 3, // String
+                    description: 'Name of the game',
+                    required: true,
+                },
+                {
+                    name: 'reason',
+                    type: 3, // String
+                    description: 'Reason why the game can\'t be cracked',
+                    required: false,
+                }
+            ]
+        });
+    }
     const rest = new discord_js_1.REST({ version: '10' }).setToken(process.env.discord_bot_token);
     try {
         console.log('Started refreshing application (/) commands.');
@@ -132,7 +135,7 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             : `\`/${commandName}\``;
         const input = options.get('name') ? `**${(_b = options.get('name')) === null || _b === void 0 ? void 0 : _b.value}**` : undefined;
         const reason = options.get('reason') ? `**${(_c = options.get('reason')) === null || _c === void 0 ? void 0 : _c.value}**` : undefined;
-        if (commandName === 'games-available') {
+        if (commandName === 'request-blacklist-info') {
             yield gamesAvailable_1.default.execute(interaction);
             yield logToChannel(interaction, action, input, reason);
         }
@@ -144,7 +147,7 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             yield newGames_1.default.execute(interaction);
             yield logToChannel(interaction, action, input, reason);
         }
-        else if (commandName === 'games-reviews') {
+        else if (commandName === 'review-games') {
             yield gamesReview_1.default.execute(interaction);
             yield logToChannel(interaction, action, input);
         }
@@ -169,8 +172,8 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         else {
             yield gamesReview_1.default.handleInteraction(interaction);
             action = showID
-                ? `games-reviews button (ID: ${userId})`
-                : `games-reviews button`;
+                ? `review-games button (ID: ${userId})`
+                : `review-games button`;
         }
         yield logToChannel(interaction, action);
     }

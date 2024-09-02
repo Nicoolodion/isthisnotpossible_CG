@@ -4,6 +4,7 @@ import gamesAvailableCommand from './commands/gamesAvailable';
 import newGamesAddCommand from './commands/newGamesAdd';
 import newGamesCommand from './commands/newGames';
 import gamesReviewsCommand from './commands/gamesReview';
+import { checkPermissions } from './utils/permissions';
 
 config();
 
@@ -46,61 +47,71 @@ const showID = process.env.show_ID === 'true';
 client.once('ready', async () => {
     console.log('Bot is online!');
 
-    const commands = [
-        {
-            name: 'games-available',
-            description: 'Check if a game can be cracked',
-            options: [
-                {
-                    name: 'name',
-                    type: 3, // String
-                    description: 'Name of the game',
-                    required: true,
-                }
-            ]
-        },
-        {
-            name: 'new-games-add',
-            description: 'Add a new game to the list',
-            options: [
-                {
-                    name: 'name',
-                    type: 3, // String
-                    description: 'Name of the game',
-                    required: true,
-                },
-                {
-                    name: 'reason',
-                    type: 3, // String
-                    description: 'Reason why the game can\'t be cracked',
-                    required: false,
-                }
-            ]
-        },
-        {
-            name: 'new-games',
-            description: 'Submit a game for review',
-            options: [
-                {
-                    name: 'name',
-                    type: 3, // String
-                    description: 'Name of the game',
-                    required: true,
-                },
-                {
-                    name: 'reason',
-                    type: 3, // String
-                    description: 'Reason for submission',
-                    required: false,
-                }
-            ]
-        },
-        {
-            name: 'games-reviews',
-            description: 'Review pending games',
-            options: []
-        }
-    ];
+    const commands = [];
+    const userRoles = client.guilds.cache.first()!.members.cache.get(client.user!.id)!.roles as any;
+    // TODO: Clean this Up?
+    if (true) {
+        commands.push(
+            {
+                name: 'request-blacklist-info',
+                description: 'Check if a game can be cracked',
+                options: [
+                    {
+                        name: 'name',
+                        type: 3, // String
+                        description: 'Name of the game',
+                        required: true,
+                    }
+                ]
+            },
+            {
+                name: 'new-games',
+                description: 'Submit a game for review',
+                options: [
+                    {
+                        name: 'name',
+                        type: 3, // String
+                        description: 'Name of the game',
+                        required: true,
+                    },
+                    {
+                        name: 'reason',
+                        type: 3, // String
+                        description: 'Reason for submission',
+                        required: false,
+                    }
+                ]
+            }
+        );
+    }
+
+    if (true) {
+        commands.push(
+            {
+                name: 'review-games',
+                description: 'Review pending games',
+                options: []
+            },
+            {
+                name: 'new-games-add',
+                description: 'Add a new game to the list',
+                options: [
+                    {
+                        name: 'name',
+                        type: 3, // String
+                        description: 'Name of the game',
+                        required: true,
+                    },
+                    {
+                        name: 'reason',
+                        type: 3, // String
+                        description: 'Reason why the game can\'t be cracked',
+                        required: false,
+                    }
+                ]
+            }
+        );
+    }
 
     const rest = new REST({ version: '10' }).setToken(process.env.discord_bot_token!);
 
@@ -128,7 +139,7 @@ client.on('interactionCreate', async interaction => {
         const input = options.get('name') ? `**${options.get('name')?.value}**` : undefined;
         const reason = options.get('reason') ? `**${options.get('reason')?.value}**` : undefined;
 
-        if (commandName === 'games-available') {
+        if (commandName === 'request-blacklist-info') {
             await gamesAvailableCommand.execute(interaction);
             await logToChannel(interaction, action, input, reason);
         } else if (commandName === 'new-games-add') {
@@ -137,7 +148,7 @@ client.on('interactionCreate', async interaction => {
         } else if (commandName === 'new-games') {
             await newGamesCommand.execute(interaction);
             await logToChannel(interaction, action, input, reason);
-        } else if (commandName === 'games-reviews') {
+        } else if (commandName === 'review-games') {
             await gamesReviewsCommand.execute(interaction);
             await logToChannel(interaction, action, input);
         }
@@ -160,8 +171,8 @@ client.on('interactionCreate', async interaction => {
         } else {
             await gamesReviewsCommand.handleInteraction(interaction);
             action = showID
-                ? `games-reviews button (ID: ${userId})`
-                : `games-reviews button`;
+                ? `review-games button (ID: ${userId})`
+                : `review-games button`;
         }
 
         await logToChannel(interaction, action);
