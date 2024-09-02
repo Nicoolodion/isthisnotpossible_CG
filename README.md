@@ -34,7 +34,7 @@ A Discord bot that manages and reviews games, including checking their crack sta
 
    Create a `.env` file in the root directory of the project with all the IDs and the discord token stored there.
 
-   The bot will use the `discord_bot_token`, `uploader`, `admin`, `team` and `expection_admin_userID` environment variables from a `.env` file in the root directory. The structure of the file should be as follows:
+   The bot will use the `discord_bot_token`, `uploader`, `admin`, `team`, `expection_admin_userID`and `loggingChannel` environment variables from a `.env` file in the root directory. The structure of the file should be as follows:
 
 ## Configuration
 
@@ -112,5 +112,5 @@ Happy coding!
 - [~] Add a moderation system (like force remove and force admin specific users) - Partly added in a janky way. Only admin privileges possible in a badly coded way
 - [ ] simplify the commands?
 - [x] fix "undefined" showing up when force adding new-games.add
-- [ ] Add logs
-
+- [x] Add logs
+- [x] Make the input not visible if there is none. (embed logging)

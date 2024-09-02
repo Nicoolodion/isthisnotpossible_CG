@@ -28,7 +28,12 @@ const gamesReviewsCommand = {
             yield interaction.reply({ content: "There are no pending games to review.", ephemeral: true });
             return;
         }
-        const gamesList = pendingGames.map((game) => `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}`).join('\n\n');
+        // Create an embed for the list of pending games
+        const embed = new discord_js_1.EmbedBuilder()
+            .setColor('#0099ff')
+            .setTitle('Pending Games for Review')
+            .setDescription(pendingGames.map((game) => `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}`).join('\n\n'))
+            .setTimestamp();
         const approveButton = new discord_js_1.ButtonBuilder()
             .setCustomId('approve')
             .setLabel('Approve ✅')
@@ -40,7 +45,7 @@ const gamesReviewsCommand = {
         const row = new discord_js_1.ActionRowBuilder()
             .addComponents(approveButton, removeButton);
         yield interaction.reply({
-            content: `Here are the pending games:\n\n${gamesList}`,
+            embeds: [embed],
             components: [row],
             ephemeral: true
         });
@@ -53,7 +58,15 @@ const gamesReviewsCommand = {
                 games.push(...pendingGames);
                 (0, fileUtils_1.writeJsonFile)('games.json', games);
                 (0, fileUtils_1.writeJsonFile)('pending-games.json', []);
-                yield interaction.update({ content: "All pending games have been approved and added to the main list.", components: [] });
+                yield interaction.update({
+                    embeds: [new discord_js_1.EmbedBuilder()
+                            .setColor('#0099ff')
+                            .setTitle('Review Status')
+                            .setDescription("All pending games have been approved and added to the main list.")
+                            .setTimestamp()
+                    ],
+                    components: []
+                });
             }
             else if (interaction.customId === 'remove') {
                 const options = pendingGames.map((game, index) => ({
@@ -67,7 +80,15 @@ const gamesReviewsCommand = {
                     .setMaxValues(options.length)
                     .addOptions(options);
                 const row = new discord_js_1.ActionRowBuilder().addComponents(selectMenu);
-                yield interaction.update({ content: "Select the games to remove:", components: [row] });
+                yield interaction.update({
+                    embeds: [new discord_js_1.EmbedBuilder()
+                            .setColor('#0099ff')
+                            .setTitle('Select Games to Remove')
+                            .setDescription("Select the games to remove from the pending list:")
+                            .setTimestamp()
+                    ],
+                    components: [row]
+                });
             }
         }
         else if (interaction.isStringSelectMenu()) {
@@ -75,7 +96,15 @@ const gamesReviewsCommand = {
             const selectedIndexes = interaction.values.map((value) => parseInt(value));
             const newPendingGames = pendingGames.filter((_, index) => !selectedIndexes.includes(index));
             (0, fileUtils_1.writeJsonFile)('pending-games.json', newPendingGames);
-            yield interaction.update({ content: "The selected games have been removed from the pending list.", components: [] });
+            yield interaction.update({
+                embeds: [new discord_js_1.EmbedBuilder()
+                        .setColor('#0099ff')
+                        .setTitle('Update Status')
+                        .setDescription("The selected games have been removed from the pending list.")
+                        .setTimestamp()
+                ],
+                components: []
+            });
         }
     })
 };

@@ -12,7 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.15.3"
+    "discord-api-types": "^0.37.99",
+    "discord.js": "^14.15.3",
+    "winston": "^3.14.2"
   },
   "devDependencies": {
     "dotenv": "^16.4.5"

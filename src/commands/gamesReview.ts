@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, ComponentType } from 'discord.js';
+import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, ComponentType, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
 
@@ -21,7 +21,14 @@ const gamesReviewsCommand = {
             return;
         }
 
-        const gamesList = pendingGames.map((game: { name: string; cracked: boolean; reason?: string }) => `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}`).join('\n\n');
+        // Create an embed for the list of pending games
+        const embed = new EmbedBuilder()
+            .setColor('#0099ff')
+            .setTitle('Pending Games for Review')
+            .setDescription(pendingGames.map((game: { name: string; cracked: boolean; reason?: string }) => 
+                `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}`
+            ).join('\n\n'))
+            .setTimestamp();
 
         const approveButton = new ButtonBuilder()
             .setCustomId('approve')
@@ -37,7 +44,7 @@ const gamesReviewsCommand = {
             .addComponents(approveButton, removeButton);
 
         await interaction.reply({
-            content: `Here are the pending games:\n\n${gamesList}`,
+            embeds: [embed],
             components: [row],
             ephemeral: true
         });
@@ -51,7 +58,15 @@ const gamesReviewsCommand = {
                 games.push(...pendingGames);
                 writeJsonFile('games.json', games);
                 writeJsonFile('pending-games.json', []);
-                await interaction.update({ content: "All pending games have been approved and added to the main list.", components: [] });
+                await interaction.update({ 
+                    embeds: [new EmbedBuilder()
+                        .setColor('#0099ff')
+                        .setTitle('Review Status')
+                        .setDescription("All pending games have been approved and added to the main list.")
+                        .setTimestamp()
+                    ],
+                    components: [] 
+                });
             } else if (interaction.customId === 'remove') {
                 const options = pendingGames.map((game: any, index: number) => ({
                     label: game.name,
@@ -66,7 +81,15 @@ const gamesReviewsCommand = {
                     .addOptions(options);
 
                 const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
-                await interaction.update({ content: "Select the games to remove:", components: [row] });
+                await interaction.update({ 
+                    embeds: [new EmbedBuilder()
+                        .setColor('#0099ff')
+                        .setTitle('Select Games to Remove')
+                        .setDescription("Select the games to remove from the pending list:")
+                        .setTimestamp()
+                    ],
+                    components: [row] 
+                });
             }
         } else if (interaction.isStringSelectMenu()) {
             const pendingGames = readJsonFile('pending-games.json');
@@ -74,7 +97,15 @@ const gamesReviewsCommand = {
             const newPendingGames = pendingGames.filter((_: any, index: number) => !selectedIndexes.includes(index));
             writeJsonFile('pending-games.json', newPendingGames);
 
-            await interaction.update({ content: "The selected games have been removed from the pending list.", components: [] });
+            await interaction.update({ 
+                embeds: [new EmbedBuilder()
+                    .setColor('#0099ff')
+                    .setTitle('Update Status')
+                    .setDescription("The selected games have been removed from the pending list.")
+                    .setTimestamp()
+                ],
+                components: [] 
+            });
         }
     }
 };

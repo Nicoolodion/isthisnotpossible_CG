@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, REST, Routes, TextChannel, EmbedBuilder, Interaction } from 'discord.js';
 import gamesAvailableCommand from './commands/gamesAvailable';
 import newGamesAddCommand from './commands/newGamesAdd';
 import newGamesCommand from './commands/newGames';
@@ -9,16 +9,43 @@ config();
 
 const client = new Client({
     intents: [
-        GatewayIntentBits.Guilds, // This is usually the only intent needed for interaction commands
-        GatewayIntentBits.GuildMessages, // Needed if you are interacting with messages in guilds
-        GatewayIntentBits.MessageContent // Needed if your bot is reading message content
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
     ]
 });
+
+// Log a message to the specified log channel
+async function logToChannel(interaction: Interaction, action: string, input?: string, reason?: string) {
+    const logChannelId = process.env.log_channel_id!;
+    const channel = await client.channels.fetch(logChannelId) as TextChannel;
+    if (channel) {
+        const embed = new EmbedBuilder()
+            .setColor('#0099ff')
+            .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
+            .addFields({ name: 'Action', value: action, inline: true })
+            .setTimestamp();
+
+        if (input) {
+            embed.addFields({ name: 'Input', value: input, inline: true });
+        }
+
+        if (reason) {
+            embed.addFields({ name: 'Reason', value: reason, inline: true });
+        }
+
+        await channel.send({ embeds: [embed] });
+    } else {
+        console.error('Log channel not found.');
+    }
+}
+
+// Get whether to show user IDs from environment variable
+const showID = process.env.show_ID === 'true';
 
 client.once('ready', async () => {
     console.log('Bot is online!');
 
-    // Registering commands with Discord
     const commands = [
         {
             name: 'games-available',
@@ -90,27 +117,55 @@ client.once('ready', async () => {
 
 client.on('interactionCreate', async interaction => {
     if (interaction.isCommand()) {
-        const { commandName } = interaction;
+        const { commandName, user, options } = interaction;
+        const username = user.username;
+        const userId = user.id;
+
+        // Format the action and input for the embed
+        const action = showID
+            ? `\`/${commandName}\` (ID: ${userId})`
+            : `\`/${commandName}\``;
+        const input = options.get('name') ? `**${options.get('name')?.value}**` : undefined;
+        const reason = options.get('reason') ? `**${options.get('reason')?.value}**` : undefined;
 
         if (commandName === 'games-available') {
             await gamesAvailableCommand.execute(interaction);
+            await logToChannel(interaction, action, input, reason);
         } else if (commandName === 'new-games-add') {
             await newGamesAddCommand.execute(interaction);
+            await logToChannel(interaction, action, input, reason);
         } else if (commandName === 'new-games') {
             await newGamesCommand.execute(interaction);
+            await logToChannel(interaction, action, input, reason);
         } else if (commandName === 'games-reviews') {
             await gamesReviewsCommand.execute(interaction);
+            await logToChannel(interaction, action, input);
         }
     } else if (interaction.isButton() || interaction.isSelectMenu()) {
-        if (interaction.customId === 'override-add') {
+        const { customId, user } = interaction;
+        const username = user.username;
+        const userId = user.id;
+
+        let action;
+        if (customId === 'override-add') {
             await newGamesAddCommand.handleInteraction(interaction);
-        } else if (interaction.customId === 'override-add-pending') {
+            action = showID
+                ? `override-add button (ID: ${userId})`
+                : `override-add button`;
+        } else if (customId === 'override-add-pending') {
             await newGamesCommand.handleInteraction(interaction);
-        } 
+            action = showID
+                ? `override-add-pending button (ID: ${userId})`
+                : `override-add-pending button`;
+        } else {
             await gamesReviewsCommand.handleInteraction(interaction);
-        
+            action = showID
+                ? `games-reviews button (ID: ${userId})`
+                : `games-reviews button`;
+        }
+
+        await logToChannel(interaction, action);
     }
 });
-
 
 client.login(process.env.discord_bot_token);
