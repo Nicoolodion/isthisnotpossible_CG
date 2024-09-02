@@ -22,7 +22,7 @@ async function logToChannel(interaction: Interaction, action: string, input?: st
     const channel = await client.channels.fetch(logChannelId) as TextChannel;
     if (channel) {
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
+            .setColor('#005bd1')
             .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
             .addFields({ name: 'Action', value: action, inline: true })
             .setTimestamp();
@@ -136,8 +136,8 @@ client.on('interactionCreate', async interaction => {
         const action = showID
             ? `\`/${commandName}\` (ID: ${userId})`
             : `\`/${commandName}\``;
-        const input = options.get('name') ? `**${options.get('name')?.value}**` : undefined;
-        const reason = options.get('reason') ? `**${options.get('reason')?.value}**` : undefined;
+        const input = options.get('name') ? `${options.get('name')?.value}` : undefined;
+        const reason = options.get('reason') ? `${options.get('reason')?.value}` : undefined;
 
         if (commandName === 'request-blacklist-info') {
             await gamesAvailableCommand.execute(interaction);
@@ -161,18 +161,20 @@ client.on('interactionCreate', async interaction => {
         if (customId === 'override-add') {
             await newGamesAddCommand.handleInteraction(interaction);
             action = showID
-                ? `override-add button (ID: ${userId})`
-                : `override-add button`;
+                ? `force added (ID: ${userId})`
+                : `force added`;
         } else if (customId === 'override-add-pending') {
             await newGamesCommand.handleInteraction(interaction);
             action = showID
-                ? `override-add-pending button (ID: ${userId})`
-                : `override-add-pending button`;
+                ? `forced added pending (ID: ${userId})`
+                : `forced added pending `;
         } else {
             await gamesReviewsCommand.handleInteraction(interaction);
-            action = showID
-                ? `review-games button (ID: ${userId})`
-                : `review-games button`;
+            action = customId === 'approve'
+                ? `review-approve`
+                : customId === 'remove'
+                    ? `review-remove`
+                    : `review-remove`;
         }
 
         await logToChannel(interaction, action);

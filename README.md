@@ -4,7 +4,7 @@ A Discord bot that checks on if a game can be cracked or not, including checking
 
 ## Features
 
-- **Check if a game can be cracked**: `//request-blacklist-info <Name of the Game>`
+- **Check if a game can be cracked**: `/request-blacklist-info <Name of the Game>`
 - **Add new games with reasons**: `/new-games-add <Name of the Game> <Reason>`
 - **Submit games for review**: `/new-games <Name of the Game> <Reason>`
 - **Review pending games**: `/review-games`
@@ -117,4 +117,6 @@ Happy coding!
 - [x] fix "undefined" showing up when force adding new-games.add
 - [x] Add logs
 - [x] Make the input not visible if there is none. (embed logging)
-- [] Automaticlly writes in a Request Thread or maybe even a Ticket when it detects a Gamename that can't be cracked.
+- [ ] Automaticlly writes in a Request Thread or maybe even a Ticket when it detects a Gamename that can't be cracked.
+- [ ] Make it possible to delete games from the main file.
+- [ ] make it show the gamename in the log when removing it using game-review

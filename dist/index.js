@@ -33,7 +33,7 @@ function logToChannel(interaction, action, input, reason) {
         const channel = yield client.channels.fetch(logChannelId);
         if (channel) {
             const embed = new discord_js_1.EmbedBuilder()
-                .setColor('#0099ff')
+                .setColor('#005bd1')
                 .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
                 .addFields({ name: 'Action', value: action, inline: true })
                 .setTimestamp();
@@ -133,8 +133,8 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         const action = showID
             ? `\`/${commandName}\` (ID: ${userId})`
             : `\`/${commandName}\``;
-        const input = options.get('name') ? `**${(_b = options.get('name')) === null || _b === void 0 ? void 0 : _b.value}**` : undefined;
-        const reason = options.get('reason') ? `**${(_c = options.get('reason')) === null || _c === void 0 ? void 0 : _c.value}**` : undefined;
+        const input = options.get('name') ? `${(_b = options.get('name')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
+        const reason = options.get('reason') ? `${(_c = options.get('reason')) === null || _c === void 0 ? void 0 : _c.value}` : undefined;
         if (commandName === 'request-blacklist-info') {
             yield gamesAvailable_1.default.execute(interaction);
             yield logToChannel(interaction, action, input, reason);
@@ -160,20 +160,22 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         if (customId === 'override-add') {
             yield newGamesAdd_1.default.handleInteraction(interaction);
             action = showID
-                ? `override-add button (ID: ${userId})`
-                : `override-add button`;
+                ? `force added (ID: ${userId})`
+                : `force added`;
         }
         else if (customId === 'override-add-pending') {
             yield newGames_1.default.handleInteraction(interaction);
             action = showID
-                ? `override-add-pending button (ID: ${userId})`
-                : `override-add-pending button`;
+                ? `forced added pending (ID: ${userId})`
+                : `forced added pending `;
         }
         else {
             yield gamesReview_1.default.handleInteraction(interaction);
-            action = showID
-                ? `review-games button (ID: ${userId})`
-                : `review-games button`;
+            action = customId === 'approve'
+                ? `review-approve`
+                : customId === 'remove'
+                    ? `review-remove`
+                    : `review-remove`;
         }
         yield logToChannel(interaction, action);
     }
