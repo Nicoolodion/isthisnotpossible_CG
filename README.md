@@ -116,3 +116,10 @@ For any questions or issues, please open an issue on the [GitHub repository](htt
 Happy coding!
 
 ```
+
+- [x] Upload to GitHub
+- [x] Detect Duplicates and still has a force add
+- [ ] clean up and improve security -- Very Important
+- [ ] Add a moderation system (like force remove and force admin specific users)
+- [ ] simplify the commands?
+- [ ] fix "undefined" showing up when force adding new-games.add

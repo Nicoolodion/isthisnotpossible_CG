@@ -100,8 +100,15 @@ client.on('interactionCreate', async interaction => {
             await gamesReviewsCommand.execute(interaction);
         }
     } else if (interaction.isButton() || interaction.isSelectMenu()) {
-        await gamesReviewsCommand.handleInteraction(interaction);
+        if (interaction.customId === 'override-add') {
+            await newGamesAddCommand.handleInteraction(interaction);
+        } else if (interaction.customId === 'override-add-pending') {
+            await newGamesCommand.handleInteraction(interaction);
+        } 
+            await gamesReviewsCommand.handleInteraction(interaction);
+        
     }
 });
+
 
 client.login(config.token);

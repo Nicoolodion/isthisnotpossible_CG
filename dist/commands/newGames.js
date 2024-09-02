@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
-const gameUtils_1 = require("../utils/gameUtils");
+const fileUtils_1 = require("../utils/fileUtils");
 const config_json_1 = __importDefault(require("../../config.json"));
 const newGamesCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
@@ -25,12 +26,49 @@ const newGamesCommand = {
         }
         const gameName = (_b = interaction.options.get('name')) === null || _b === void 0 ? void 0 : _b.value;
         const reason = (_c = interaction.options.get('reason')) === null || _c === void 0 ? void 0 : _c.value;
-        if (!gameName) {
-            yield interaction.reply({ content: "Please provide a game name.", ephemeral: true });
-            return;
+        const pendingGames = (0, fileUtils_1.readJsonFile)('pending-games.json');
+        const isGamePending = pendingGames.some((game) => game.name.toLowerCase() === gameName.toLowerCase());
+        if (isGamePending) {
+            const overrideButton = new discord_js_1.ButtonBuilder()
+                .setCustomId('override-add-pending')
+                .setLabel('Add Anyway ✅')
+                .setStyle(discord_js_1.ButtonStyle.Success);
+            const row = new discord_js_1.ActionRowBuilder()
+                .addComponents(overrideButton);
+            yield interaction.reply({
+                content: `The game \`${gameName}\` is already in the pending list. Reason provided: \`${reason || 'No reason provided'}\`.`,
+                components: [row],
+                ephemeral: true
+            });
         }
-        (0, gameUtils_1.addPendingGame)({ name: gameName, cracked: false, reason });
-        yield interaction.reply({ content: `${gameName} has been submitted for review.`, ephemeral: true });
+        else {
+            const newPendingGame = {
+                name: gameName,
+                cracked: false,
+                reason: reason
+            };
+            pendingGames.push(newPendingGame);
+            (0, fileUtils_1.writeJsonFile)('pending-games.json', pendingGames);
+            yield interaction.reply({ content: `The game \`${gameName}\` has been submitted for review.`, ephemeral: true });
+        }
     }),
+    handleInteraction: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
+        if (interaction.isButton() && interaction.customId === 'override-add-pending') {
+            // Extract the game name and reason from the message content
+            const gameNameMatch = interaction.message.content.match(/`(.*?)`/);
+            const reasonMatch = interaction.message.content.match(/Reason provided: `([^`]*)`/);
+            const gameName = gameNameMatch ? gameNameMatch[1] : null;
+            const reason = reasonMatch ? reasonMatch[1] : 'No reason provided';
+            if (!gameName) {
+                yield interaction.reply({ content: 'Error: Game name could not be determined.', ephemeral: true });
+                return;
+            }
+            const newPendingGame = Object.assign({ name: gameName, cracked: false }, (reason.trim() && reason.trim() !== 'No reason provided' ? { reason: reason.trim() } : {}));
+            const pendingGames = (0, fileUtils_1.readJsonFile)('pending-games.json');
+            pendingGames.push(newPendingGame);
+            (0, fileUtils_1.writeJsonFile)('pending-games.json', pendingGames);
+            yield interaction.update({ content: `The game \`${gameName}\` has been added to the pending list despite being already present.`, components: [] });
+        }
+    })
 };
 exports.default = newGamesCommand;

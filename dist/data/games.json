@@ -5,22 +5,38 @@
     "reason": "Online only"
   },
   {
-    "name": "Cyberpunk",
-    "cracked": false
-  },
-  {
-    "name": "cyberpynk 2077",
-    "cracked": false,
-    "reason": "I like it to much"
-  },
-  {
-    "name": "mirage",
-    "cracked": false,
-    "reason": "online only"
-  },
-  {
     "name": "jedi survivor",
     "cracked": false,
     "reason": "denuvo"
+  },
+  {
+    "name": "cyberpunk 2077",
+    "cracked": false
+  },
+  {
+    "name": "game 1",
+    "cracked": false
+  },
+  {
+    "name": "game 2",
+    "cracked": false
+  },
+  {
+    "name": "game 3",
+    "cracked": false
+  },
+  {
+    "name": "game 4",
+    "cracked": false
+  },
+  {
+    "name": "game 4",
+    "cracked": false,
+    "reason": "i don't like it"
+  },
+  {
+    "name": "game 4",
+    "cracked": false,
+    "reason": "undefined"
   }
 ]

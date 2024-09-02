@@ -111,6 +111,12 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         }
     }
     else if (interaction.isButton() || interaction.isSelectMenu()) {
+        if (interaction.customId === 'override-add') {
+            yield newGamesAdd_1.default.handleInteraction(interaction);
+        }
+        else if (interaction.customId === 'override-add-pending') {
+            yield newGames_1.default.handleInteraction(interaction);
+        }
         yield gamesReview_1.default.handleInteraction(interaction);
     }
 }));
