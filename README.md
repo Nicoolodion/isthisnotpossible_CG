@@ -32,20 +32,9 @@ A Discord bot that manages and reviews games, including checking their crack sta
 
 3. **Create a Configuration File**
 
-   Create a `config.json` file in the root directory of the project with the following content:
+   Create a `.env` file in the root directory of the project with all the IDs and the discord token stored there.
 
-   ```json
-   {
-     "token": "YOUR_DISCORD_BOT_TOKEN",
-     "roles": {
-       "uploader": "YOUR_UPLOADER_ROLE_ID",
-       "admin": "YOUR_ADMIN_ROLE_ID",
-       "team": "YOUR_TEAM_ROLE_ID"
-     }
-   }
-   ```
-
-   Replace `"YOUR_DISCORD_BOT_TOKEN"`, `"YOUR_UPLOADER_ROLE_ID"`, `"YOUR_ADMIN_ROLE_ID"`, and `"YOUR_TEAM_ROLE_ID"` with your actual bot token and role IDs.
+   The bot will use the `discord_bot_token`, `uploader`, `admin`, `team` and `expection_admin_userID` environment variables from a `.env` file in the root directory. The structure of the file should be as follows:
 
 ## Configuration
 
