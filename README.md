@@ -74,33 +74,6 @@ afterwards start it:
 npm start
 ```
 
-## Contribution
-
-1. **Fork the Repository**: Click the "Fork" button on GitHub to create your copy of the repository.
-2. **Clone Your Fork**:
-
-   ```bash
-   git clone https://github.com/Nicoolodion/isthisnotpossible_CG.git
-   cd isthisnotpossible_CG
-   ```
-
-3. **Create a Branch**:
-
-   ```bash
-   git checkout -b feature-branch
-   ```
-
-4. **Make Changes**: Implement your changes or new features.
-5. **Commit and Push**:
-
-   ```bash
-   git add .
-   git commit -m "Add your commit message"
-   git push origin feature-branch
-   ```
-
-6. **Create a Pull Request**: Go to the original repository and create a pull request from your fork.
-
 ## Contact
 
 For any questions or issues, please open an issue on the [GitHub repository](https://github.com/Nicoolodion/isthisnotpossible_CG/issues).
@@ -113,10 +86,10 @@ Happy coding!
 - [x] Detect Duplicates and still has a force add
 - [x] clean up and improve security -- Very Important
 - [~] Add a moderation system (like force remove and force admin specific users) - Partly added in a janky way. Only admin privileges possible in a badly coded way
-- [ ] simplify the commands?
-- [x] fix "undefined" showing up when force adding new-games.add
 - [x] Add logs
+- [x] Make it possible to delete games from the main file.
+- [x] fix "undefined" showing up when force adding new-games.add
 - [x] Make the input not visible if there is none. (embed logging)
-- [ ] Automaticlly writes in a Request Thread or maybe even a Ticket when it detects a Gamename that can't be cracked.
-- [ ] Make it possible to delete games from the main file.
+- [ ] Automaticlly writes in a Request Thread or maybe even a Ticket when it detects a Gamename that can't be cracked. Mor join it with the request bot
 - [ ] make it show the gamename in the log when removing it using game-review
+- [ ] simplify the commands?

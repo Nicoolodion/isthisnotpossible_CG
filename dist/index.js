@@ -18,6 +18,7 @@ const gamesAvailable_1 = __importDefault(require("./commands/gamesAvailable"));
 const newGamesAdd_1 = __importDefault(require("./commands/newGamesAdd"));
 const newGames_1 = __importDefault(require("./commands/newGames"));
 const gamesReview_1 = __importDefault(require("./commands/gamesReview"));
+const deleteGamesCommand_1 = __importDefault(require("./commands/deleteGamesCommand"));
 (0, dotenv_1.config)();
 const client = new discord_js_1.Client({
     intents: [
@@ -111,6 +112,17 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
                     required: false,
                 }
             ]
+        }, {
+            name: 'delete-games',
+            description: 'Delete games from the list',
+            options: [
+                {
+                    name: 'name',
+                    type: 3, // String
+                    description: 'Name of the game to delete',
+                    required: true,
+                }
+            ]
         });
     }
     const rest = new discord_js_1.REST({ version: '10' }).setToken(process.env.discord_bot_token);
@@ -151,6 +163,10 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             yield gamesReview_1.default.execute(interaction);
             yield logToChannel(interaction, action, input);
         }
+        else if (commandName === 'delete-games') {
+            yield deleteGamesCommand_1.default.execute(interaction);
+            yield logToChannel(interaction, action, input);
+        }
     }
     else if (interaction.isButton() || interaction.isSelectMenu()) {
         const { customId, user } = interaction;
@@ -167,9 +183,9 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             yield newGames_1.default.handleInteraction(interaction);
             action = showID
                 ? `forced added pending (ID: ${userId})`
-                : `forced added pending `;
+                : `forced added pending`;
         }
-        else {
+        else if (customId === 'approve' || customId === 'remove' || customId === 'remove-select') {
             yield gamesReview_1.default.handleInteraction(interaction);
             action = customId === 'approve'
                 ? `review-approve`
@@ -177,7 +193,20 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
                     ? `review-remove`
                     : `review-remove`;
         }
-        yield logToChannel(interaction, action);
+        else if (customId === 'close' || customId === 'confirm-delete' || customId === 'delete-select') {
+            yield deleteGamesCommand_1.default.handleInteraction(interaction);
+            action = customId === 'close'
+                ? `delete-close`
+                : customId === 'confirm-delete'
+                    ? `delete-confirm`
+                    : `delete-select`;
+        }
+        else {
+            action = 'unknown-action';
+        }
+        if (customId !== 'delete-select') { // Avoid logging dropdown selections
+            yield logToChannel(interaction, action);
+        }
     }
 }));
 client.login(process.env.discord_bot_token);

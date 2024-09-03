@@ -5,6 +5,7 @@ import newGamesAddCommand from './commands/newGamesAdd';
 import newGamesCommand from './commands/newGames';
 import gamesReviewsCommand from './commands/gamesReview';
 import { checkPermissions } from './utils/permissions';
+import deleteGamesCommand from './commands/deleteGamesCommand';
 
 config();
 
@@ -109,7 +110,19 @@ client.once('ready', async () => {
                         required: false,
                     }
                 ]
-            }
+            },
+            {
+                name: 'delete-games',
+                description: 'Delete games from the list',
+                options: [
+                    {
+                        name: 'name',
+                        type: 3, // String
+                        description: 'Name of the game to delete',
+                        required: true,
+                    }
+                ]
+            }    
         );
     }
 
@@ -151,6 +164,9 @@ client.on('interactionCreate', async interaction => {
         } else if (commandName === 'review-games') {
             await gamesReviewsCommand.execute(interaction);
             await logToChannel(interaction, action, input);
+        } else if (commandName === 'delete-games') {
+            await deleteGamesCommand.execute(interaction);
+            await logToChannel(interaction, action, input);
         }
     } else if (interaction.isButton() || interaction.isSelectMenu()) {
         const { customId, user } = interaction;
@@ -167,17 +183,28 @@ client.on('interactionCreate', async interaction => {
             await newGamesCommand.handleInteraction(interaction);
             action = showID
                 ? `forced added pending (ID: ${userId})`
-                : `forced added pending `;
-        } else {
+                : `forced added pending`;
+        } else if (customId === 'approve' || customId === 'remove' || customId === 'remove-select') {
             await gamesReviewsCommand.handleInteraction(interaction);
             action = customId === 'approve'
                 ? `review-approve`
                 : customId === 'remove'
                     ? `review-remove`
                     : `review-remove`;
+        } else if (customId === 'close' || customId === 'confirm-delete' || customId === 'delete-select') {  
+            await deleteGamesCommand.handleInteraction(interaction);
+            action = customId === 'close'
+                ? `delete-close`
+                : customId === 'confirm-delete'
+                    ? `delete-confirm`
+                    : `delete-select`;
+        } else {
+            action = 'unknown-action';
         }
 
-        await logToChannel(interaction, action);
+        if (customId !== 'delete-select') { // Avoid logging dropdown selections
+            await logToChannel(interaction, action);
+        }
     }
 });
 
