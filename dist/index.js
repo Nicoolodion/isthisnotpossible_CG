@@ -16,7 +16,6 @@ const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const gamesAvailable_1 = __importDefault(require("./commands/gamesAvailable"));
 const newGamesAdd_1 = __importDefault(require("./commands/newGamesAdd"));
-const newGames_1 = __importDefault(require("./commands/newGames"));
 const gamesReview_1 = __importDefault(require("./commands/gamesReview"));
 const deleteGamesCommand_1 = __importDefault(require("./commands/deleteGamesCommand"));
 (0, dotenv_1.config)();
@@ -69,23 +68,6 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
                     type: 3, // String
                     description: 'Name of the game',
                     required: true,
-                }
-            ]
-        }, {
-            name: 'new-games',
-            description: 'Submit a game for review',
-            options: [
-                {
-                    name: 'name',
-                    type: 3, // String
-                    description: 'Name of the game',
-                    required: true,
-                },
-                {
-                    name: 'reason',
-                    type: 3, // String
-                    description: 'Reason for submission',
-                    required: false,
                 }
             ]
         });
@@ -155,10 +137,6 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             yield newGamesAdd_1.default.execute(interaction);
             yield logToChannel(interaction, action, input, reason);
         }
-        else if (commandName === 'new-games') {
-            yield newGames_1.default.execute(interaction);
-            yield logToChannel(interaction, action, input, reason);
-        }
         else if (commandName === 'review-games') {
             yield gamesReview_1.default.execute(interaction);
             yield logToChannel(interaction, action, input);
@@ -178,12 +156,6 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             action = showID
                 ? `force added (ID: ${userId})`
                 : `force added`;
-        }
-        else if (customId === 'override-add-pending') {
-            yield newGames_1.default.handleInteraction(interaction);
-            action = showID
-                ? `forced added pending (ID: ${userId})`
-                : `forced added pending`;
         }
         else if (customId === 'approve' || customId === 'remove' || customId === 'remove-select') {
             yield gamesReview_1.default.handleInteraction(interaction);

@@ -20,7 +20,7 @@ const gamesReviewsCommand = {
         var _a, _b, _c;
         const userRoles = (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.roles;
         const { adminUserId } = require('../data/permissions.json');
-        const overrides = require('../data/permissions.json').overrides['request-blacklist-info'];
+        const overrides = require('../data/permissions.json').overrides['review-games'];
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;
         if (disabledUserIds.includes(interaction.user.id) || (!(0, permissions_1.checkPermissions)(userRoles, (_b = process.env.admin) !== null && _b !== void 0 ? _b : '') && !(0, permissions_1.checkPermissions)(userRoles, (_c = process.env.uploader) !== null && _c !== void 0 ? _c : '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {

@@ -20,14 +20,6 @@
                 ""
             ]
         },
-        "new-games": {
-            "allow": [
-                ""
-            ],
-            "deny": [
-                ""
-            ]
-        },
         "review-games": {
             "allow": [
                 ""

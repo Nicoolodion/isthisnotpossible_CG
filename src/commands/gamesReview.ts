@@ -10,7 +10,7 @@ const gamesReviewsCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
         const { adminUserId } = require('../data/permissions.json');
-        const overrides = require('../data/permissions.json').overrides['request-blacklist-info'];
+        const overrides = require('../data/permissions.json').overrides['review-games'];
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;
 

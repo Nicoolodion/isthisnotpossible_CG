@@ -2,7 +2,6 @@ import { config } from 'dotenv';
 import { Client, GatewayIntentBits, REST, Routes, TextChannel, EmbedBuilder, Interaction } from 'discord.js';
 import gamesAvailableCommand from './commands/gamesAvailable';
 import newGamesAddCommand from './commands/newGamesAdd';
-import newGamesCommand from './commands/newGames';
 import gamesReviewsCommand from './commands/gamesReview';
 import { checkPermissions } from './utils/permissions';
 import deleteGamesCommand from './commands/deleteGamesCommand';
@@ -62,24 +61,6 @@ client.once('ready', async () => {
                         type: 3, // String
                         description: 'Name of the game',
                         required: true,
-                    }
-                ]
-            },
-            {
-                name: 'new-games',
-                description: 'Submit a game for review',
-                options: [
-                    {
-                        name: 'name',
-                        type: 3, // String
-                        description: 'Name of the game',
-                        required: true,
-                    },
-                    {
-                        name: 'reason',
-                        type: 3, // String
-                        description: 'Reason for submission',
-                        required: false,
                     }
                 ]
             }
@@ -158,9 +139,6 @@ client.on('interactionCreate', async interaction => {
         } else if (commandName === 'new-games-add') {
             await newGamesAddCommand.execute(interaction);
             await logToChannel(interaction, action, input, reason);
-        } else if (commandName === 'new-games') {
-            await newGamesCommand.execute(interaction);
-            await logToChannel(interaction, action, input, reason);
         } else if (commandName === 'review-games') {
             await gamesReviewsCommand.execute(interaction);
             await logToChannel(interaction, action, input);
@@ -179,11 +157,6 @@ client.on('interactionCreate', async interaction => {
             action = showID
                 ? `force added (ID: ${userId})`
                 : `force added`;
-        } else if (customId === 'override-add-pending') {
-            await newGamesCommand.handleInteraction(interaction);
-            action = showID
-                ? `forced added pending (ID: ${userId})`
-                : `forced added pending`;
         } else if (customId === 'approve' || customId === 'remove' || customId === 'remove-select') {
             await gamesReviewsCommand.handleInteraction(interaction);
             action = customId === 'approve'
