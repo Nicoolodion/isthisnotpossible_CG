@@ -8,6 +8,10 @@ A Discord bot that checks on if a game can be cracked or not, including checking
 - **Add new games with reasons**: `/new-games-add <Name of the Game> <Reason>`
 - **Submit games for review**: `/new-games <Name of the Game> <Reason>`
 - **Review pending games**: `/review-games`
+- **Delete games**: `/delete-games <Name of the Game>`
+- **Included logs and easy to use**
+- **Duplicate Detection**
+- **Easy to use Permission Management**
 
 ## Prerequisites
 
@@ -55,10 +59,11 @@ A Discord bot that checks on if a game can be cracked or not, including checking
 
 ## Commands
 
-- **//request-blacklist-info <Name of the Game>**: Checks if the specified game can be cracked and provides details. Supports partial matches and lists up to 3 results.
+- **/request-blacklist-info <Name of the Game>**: Checks if the specified game can be cracked and provides details. Supports partial matches and lists up to 3 results.
 - **/new-games-add <Name of the Game> <Reason>**: Adds a new game with a reason. Accessible by users with `@uploader` or `@admin` roles.
 - **/new-games <Name of the Game> <Reason>**: Submits a new game for review. Accessible by users with the `@team` role.
 - **/review-games**: Lists pending games and provides options to approve or remove them. Requires `@admin` or `@uploader` role for access.
+- **/delete-games <Name of the Game>**: Deletes a game in the list. Requires `@admin` or `@uploader` role for access.
 
 ## Running the Bot
 
@@ -85,7 +90,7 @@ Happy coding!
 - [x] Upload to GitHub
 - [x] Detect Duplicates and still has a force add
 - [x] clean up and improve security -- Very Important
-- [~] Add a moderation system (like force remove and force admin specific users) - Partly added in a janky way. Only admin privileges possible in a badly coded way
+- [~] Add a moderation system (like force remove and force admin specific users) - Partly added in a janky way. Only admin privileges possible.
 - [x] Add logs
 - [x] Make it possible to delete games from the main file.
 - [x] fix "undefined" showing up when force adding new-games.add
