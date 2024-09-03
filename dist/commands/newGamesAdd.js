@@ -13,6 +13,7 @@ const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
 const fileUtils_1 = require("../utils/fileUtils");
+const gameUtils_1 = require("../utils/gameUtils");
 (0, dotenv_1.config)();
 const newGamesAddCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
@@ -64,6 +65,7 @@ const newGamesAddCommand = {
                 .setFooter({ text: 'Thanks for contributing!' })
                 .setTimestamp();
             yield interaction.reply({ embeds: [embed], ephemeral: true });
+            (0, gameUtils_1.reloadCache)(); // Reload cache after adding a game
         }
     }),
     handleInteraction: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
@@ -82,6 +84,7 @@ const newGamesAddCommand = {
             games.push(newGame);
             (0, fileUtils_1.writeJsonFile)('games.json', games);
             yield interaction.update({ content: `The game \`${gameName}\` has been added to the list despite being already present.`, components: [] });
+            (0, gameUtils_1.reloadCache)(); // Reload cache after adding a game
         }
     })
 };

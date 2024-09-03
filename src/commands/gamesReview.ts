@@ -2,6 +2,7 @@ import { config } from 'dotenv';
 import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, ComponentType, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
+import { reloadCache } from '../utils/gameUtils';
 
 config();
 
@@ -65,6 +66,7 @@ const gamesReviewsCommand = {
                 games.push(...pendingGames);
                 writeJsonFile('games.json', games);
                 writeJsonFile('pending-games.json', []);
+                reloadCache();
                 await interaction.update({ 
                     embeds: [new EmbedBuilder()
                         .setColor('#0099ff')
@@ -103,7 +105,7 @@ const gamesReviewsCommand = {
             const selectedIndexes = interaction.values.map((value: string) => parseInt(value));
             const newPendingGames = pendingGames.filter((_: any, index: number) => !selectedIndexes.includes(index));
             writeJsonFile('pending-games.json', newPendingGames);
-
+            reloadCache();
             await interaction.update({ 
                 embeds: [new EmbedBuilder()
                     .setColor('#0099ff')

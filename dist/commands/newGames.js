@@ -13,6 +13,7 @@ const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
 const fileUtils_1 = require("../utils/fileUtils");
+const gameUtils_1 = require("../utils/gameUtils");
 (0, dotenv_1.config)();
 const newGamesCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
@@ -64,15 +65,16 @@ const newGamesCommand = {
                 .setFooter({ text: 'Thanks for contributing!' })
                 .setTimestamp();
             yield interaction.reply({ embeds: [embed], ephemeral: true });
+            (0, gameUtils_1.reloadCache)(); // Reload cache after adding a game
         }
     }),
     handleInteraction: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
-        var _e, _f;
         if (interaction.isButton() && interaction.customId === 'override-add-pending') {
+            // Extract the game name and reason from the message content
             const gameNameMatch = interaction.message.content.match(/`(.*?)`/);
             const reasonMatch = interaction.message.content.match(/Reason provided: `([^`]*)`/);
-            const gameName = (_e = gameNameMatch === null || gameNameMatch === void 0 ? void 0 : gameNameMatch[1]) !== null && _e !== void 0 ? _e : null;
-            const reason = (_f = reasonMatch === null || reasonMatch === void 0 ? void 0 : reasonMatch[1]) !== null && _f !== void 0 ? _f : 'No reason provided';
+            const gameName = gameNameMatch ? gameNameMatch[1] : null;
+            const reason = reasonMatch ? reasonMatch[1] : 'No reason provided';
             if (!gameName) {
                 yield interaction.reply({ content: 'Error: Game name could not be determined.', ephemeral: true });
                 return;
@@ -82,6 +84,7 @@ const newGamesCommand = {
             pendingGames.push(newPendingGame);
             (0, fileUtils_1.writeJsonFile)('pending-games.json', pendingGames);
             yield interaction.update({ content: `The game \`${gameName}\` has been added to the pending list despite being already present.`, components: [] });
+            (0, gameUtils_1.reloadCache)(); // Reload cache after adding a game
         }
     })
 };

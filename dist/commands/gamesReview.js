@@ -13,6 +13,7 @@ const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
 const fileUtils_1 = require("../utils/fileUtils");
+const gameUtils_1 = require("../utils/gameUtils");
 (0, dotenv_1.config)();
 const gamesReviewsCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
@@ -64,6 +65,7 @@ const gamesReviewsCommand = {
                 games.push(...pendingGames);
                 (0, fileUtils_1.writeJsonFile)('games.json', games);
                 (0, fileUtils_1.writeJsonFile)('pending-games.json', []);
+                (0, gameUtils_1.reloadCache)();
                 yield interaction.update({
                     embeds: [new discord_js_1.EmbedBuilder()
                             .setColor('#0099ff')
@@ -102,6 +104,7 @@ const gamesReviewsCommand = {
             const selectedIndexes = interaction.values.map((value) => parseInt(value));
             const newPendingGames = pendingGames.filter((_, index) => !selectedIndexes.includes(index));
             (0, fileUtils_1.writeJsonFile)('pending-games.json', newPendingGames);
+            (0, gameUtils_1.reloadCache)();
             yield interaction.update({
                 embeds: [new discord_js_1.EmbedBuilder()
                         .setColor('#0099ff')

@@ -2,6 +2,7 @@ import { config } from 'dotenv';
 import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
+import { reloadCache } from '../utils/gameUtils';
 
 config();
 
@@ -60,6 +61,7 @@ const newGamesCommand = {
                 .setFooter({ text: 'Thanks for contributing!'})
                 .setTimestamp()
             await interaction.reply({ embeds: [embed], ephemeral: true });
+            reloadCache();  // Reload cache after adding a game
         }
     },
 
@@ -87,6 +89,7 @@ const newGamesCommand = {
             writeJsonFile('pending-games.json', pendingGames);
 
             await interaction.update({ content: `The game \`${gameName}\` has been added to the pending list despite being already present.`, components: [] });
+            reloadCache();  // Reload cache after adding a game
         }
     }
 };

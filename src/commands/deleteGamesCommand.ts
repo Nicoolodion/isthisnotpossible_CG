@@ -2,6 +2,7 @@ import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBu
 import { checkPermissions } from '../utils/permissions';
 import { searchGames } from '../utils/gameUtils';
 import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
+import { reloadCache } from '../utils/gameUtils';
 
 const deleteGamesCommand = {
     execute: async (interaction: CommandInteraction) => {
@@ -114,6 +115,7 @@ const deleteGamesCommand = {
                     embeds: [new EmbedBuilder().setColor('#00ff00').setDescription("The selected games have been deleted from the main list.")],
                     components: [],
                 });
+                reloadCache();
             }
         } else if (interaction.isStringSelectMenu()) {
             const selectedGames = interaction.values;
