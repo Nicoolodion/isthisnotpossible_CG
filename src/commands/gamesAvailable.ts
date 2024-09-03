@@ -8,8 +8,12 @@ config();
 const gamesAvailableCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
-        const expectedAdminUserId = process.env.expection_admin_userID;
-        if (!checkPermissions(userRoles, process.env.team ?? '') && interaction.user.id !== expectedAdminUserId) {
+        const { adminUserId } = require('../data/permissions.json');
+        const overrides = require('../data/permissions.json').overrides['request-blacklist-info'];
+        const allowedUserIds = overrides.allow;
+        const disabledUserIds = overrides.deny;
+
+        if (disabledUserIds.includes(interaction.user.id) || (!checkPermissions(userRoles, process.env.team ?? '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
             const embed = new EmbedBuilder()
             .setColor('#FF0000')
                 .setDescription('You don\'t have permission to use this command.');

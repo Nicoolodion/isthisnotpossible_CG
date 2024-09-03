@@ -18,8 +18,11 @@ const gamesAvailableCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b, _c;
         const userRoles = (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.roles;
-        const expectedAdminUserId = process.env.expection_admin_userID;
-        if (!(0, permissions_1.checkPermissions)(userRoles, (_b = process.env.team) !== null && _b !== void 0 ? _b : '') && interaction.user.id !== expectedAdminUserId) {
+        const { adminUserId } = require('../data/permissions.json');
+        const overrides = require('../data/permissions.json').overrides['request-blacklist-info'];
+        const allowedUserIds = overrides.allow;
+        const disabledUserIds = overrides.deny;
+        if (disabledUserIds.includes(interaction.user.id) || (!(0, permissions_1.checkPermissions)(userRoles, (_b = process.env.team) !== null && _b !== void 0 ? _b : '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription('You don\'t have permission to use this command.');

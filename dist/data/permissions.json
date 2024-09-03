@@ -1,23 +1,47 @@
 
 {
     "admins": [
-        "723506331700691029"
+        ""
     ],
     "overrides": {
-        "games-available": {
+        "request-blacklist-info": {
             "allow": [
-                "123456789012345678"
+                ""
             ],
             "deny": [
-                "723506331700691029"
+                ""
             ]
         },
         "new-games-add": {
             "allow": [
-                "723506331700691029"
+                ""
             ],
             "deny": [
-                "345678901234567890"
+                ""
+            ]
+        },
+        "new-games": {
+            "allow": [
+                ""
+            ],
+            "deny": [
+                ""
+            ]
+        },
+        "review-games": {
+            "allow": [
+                ""
+            ],
+            "deny": [
+                ""
+            ]
+        },
+        "delete-games": {
+            "allow": [
+                ""
+            ],
+            "deny": [
+                ""
             ]
         }
     }

@@ -18,9 +18,15 @@ const newGamesCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b, _c, _d;
         const userRoles = (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.roles;
-        const expectedAdminUserId = process.env.expection_admin_userID;
-        if (!(0, permissions_1.checkPermissions)(userRoles, (_b = process.env.team) !== null && _b !== void 0 ? _b : '') && interaction.user.id !== expectedAdminUserId) {
-            yield interaction.reply({ content: "You don't have permission to use this command.", ephemeral: true });
+        const { adminUserId } = require('../data/permissions.json');
+        const overrides = require('../data/permissions.json').overrides['request-blacklist-info'];
+        const allowedUserIds = overrides.allow;
+        const disabledUserIds = overrides.deny;
+        if (disabledUserIds.includes(interaction.user.id) || (!(0, permissions_1.checkPermissions)(userRoles, (_b = process.env.team) !== null && _b !== void 0 ? _b : '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription('You don\'t have permission to use this command.');
+            yield interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
         const gameName = (_c = interaction.options.get('name')) === null || _c === void 0 ? void 0 : _c.value;
@@ -34,8 +40,11 @@ const newGamesCommand = {
                 .setStyle(discord_js_1.ButtonStyle.Success);
             const row = new discord_js_1.ActionRowBuilder()
                 .addComponents(overrideButton);
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription(`The game \`${gameName}\` is already on the Pending list. Reason provided: \`${reason || 'No reason provided'}\`.`);
             yield interaction.reply({
-                content: `The game \`${gameName}\` is already in the pending list. Reason provided: \`${reason || 'No reason provided'}\`.`,
+                embeds: [embed],
                 components: [row],
                 ephemeral: true
             });
@@ -48,16 +57,22 @@ const newGamesCommand = {
             };
             pendingGames.push(newPendingGame);
             (0, fileUtils_1.writeJsonFile)('pending-games.json', pendingGames);
-            yield interaction.reply({ content: `The game \`${gameName}\` has been submitted for review.`, ephemeral: true });
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor('#00FF00')
+                .setTitle('**Game Submitted for Review!**')
+                .setDescription(`The game \`${gameName}\` has been Submitted for Review.`)
+                .setFooter({ text: 'Thanks for contributing!' })
+                .setTimestamp();
+            yield interaction.reply({ embeds: [embed], ephemeral: true });
         }
     }),
     handleInteraction: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
+        var _e, _f;
         if (interaction.isButton() && interaction.customId === 'override-add-pending') {
-            // Extract the game name and reason from the message content
             const gameNameMatch = interaction.message.content.match(/`(.*?)`/);
             const reasonMatch = interaction.message.content.match(/Reason provided: `([^`]*)`/);
-            const gameName = gameNameMatch ? gameNameMatch[1] : null;
-            const reason = reasonMatch ? reasonMatch[1] : 'No reason provided';
+            const gameName = (_e = gameNameMatch === null || gameNameMatch === void 0 ? void 0 : gameNameMatch[1]) !== null && _e !== void 0 ? _e : null;
+            const reason = (_f = reasonMatch === null || reasonMatch === void 0 ? void 0 : reasonMatch[1]) !== null && _f !== void 0 ? _f : 'No reason provided';
             if (!gameName) {
                 yield interaction.reply({ content: 'Error: Game name could not be determined.', ephemeral: true });
                 return;

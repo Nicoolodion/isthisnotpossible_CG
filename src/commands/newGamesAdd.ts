@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-import { CommandInteraction, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
+import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
 
@@ -8,9 +8,16 @@ config();
 const newGamesAddCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
-        const expectedAdminUserId = process.env.expection_admin_userID;
-        if (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '') && interaction.user.id !== expectedAdminUserId) {
-            await interaction.reply({ content: "You don't have permission to use this command.", ephemeral: true });
+        const { adminUserId } = require('../data/permissions.json');
+        const overrides = require('../data/permissions.json').overrides['request-blacklist-info'];
+        const allowedUserIds = overrides.allow;
+        const disabledUserIds = overrides.deny;
+
+        if (disabledUserIds.includes(interaction.user.id) || (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
+            const embed = new EmbedBuilder()
+            .setColor('#FF0000')
+            .setDescription('You don\'t have permission to use this command.');
+            await interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
 
@@ -28,8 +35,11 @@ const newGamesAddCommand = {
             const row = new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(overrideButton);
 
+            const embed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription(`The game \`${gameName}\` is already on the list. Reason provided: \`${reason || 'No reason provided'}\`.`);
             await interaction.reply({
-                content: `The game \`${gameName}\` is already on the list. Reason provided: \`${reason || 'No reason provided'}\`.` ,
+                embeds: [embed],
                 components: [row],
                 ephemeral: true
             });
@@ -43,7 +53,13 @@ const newGamesAddCommand = {
             games.push(newGame);
             writeJsonFile('games.json', games);
 
-            await interaction.reply({ content: `The game \`${gameName}\` has been added to the list.`, ephemeral: true });
+            const embed = new EmbedBuilder()
+                .setColor('#00FF00')
+                .setTitle('**Game Added!**')
+                .setDescription(`The game \`${gameName}\` has been added to the list.`)
+                .setFooter({ text: 'Thanks for contributing!' })
+                .setTimestamp()
+            await interaction.reply({ embeds: [embed], ephemeral: true });
         }
     },
 
