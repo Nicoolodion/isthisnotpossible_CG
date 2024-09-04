@@ -96,5 +96,7 @@ Happy coding!
 - [x] simplify the commands?
 - [ ] Automaticlly writes in a Request Thread or maybe even a Ticket when it detects a Gamename that can't be cracked. Mor join it with the request bot
 - [ ] make it show the gamename in the log when removing it using game-review
-- [ ] ForceAdd doesn't work using the command for uploaders and Admins (and maybe normal two?)
+- [!] ForceAdd doesn't work using the command for uploaders and Admins (and maybe normal two?) - Removed
 - [ ] improve logs
+
+-- Development stopped due to not needing it anymore and already being to a satisfactory state --

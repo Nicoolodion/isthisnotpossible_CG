@@ -5,6 +5,7 @@ import newGamesAddCommand from './commands/newGamesAdd';
 import gamesReviewsCommand from './commands/gamesReview';
 import { checkPermissions } from './utils/permissions';
 import deleteGamesCommand from './commands/deleteGamesCommand';
+import selectedGames from './commands/deleteGamesCommand';
 
 config();
 
@@ -152,6 +153,7 @@ client.on('interactionCreate', async interaction => {
         const userId = user.id;
 
         let action;
+        let input;
         if (customId === 'override-add') {
             await newGamesAddCommand.handleInteraction(interaction);
             action = showID

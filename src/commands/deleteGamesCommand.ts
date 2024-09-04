@@ -92,6 +92,7 @@ const deleteGamesCommand = {
         if (interaction.isButton()) {
             const matchingGames = interaction.client['matchingGames'];
             const selectedGames = interaction.client['selectedGames'];
+            
 
             if (interaction.customId === 'close') {
                 await interaction.update({
