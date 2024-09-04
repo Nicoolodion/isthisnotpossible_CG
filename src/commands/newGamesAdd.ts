@@ -43,20 +43,20 @@ const newGamesAddCommand = {
         const isGameOnList = gamesList.some((game: any) => game.name.toLowerCase() === gameName.toLowerCase());
 
         if (isGameOnList) {
-            const overrideButton = new ButtonBuilder()
-                .setCustomId(`override-add-${hasTeamRole && !hasUploaderOrAdminRole ? 'pending' : ''}`)
-                .setLabel('Add Anyway ✅')
-                .setStyle(ButtonStyle.Success);
+            //const overrideButton = new ButtonBuilder()
+            //    .setCustomId(`override-add-${hasTeamRole && !hasUploaderOrAdminRole ? 'pending' : ''}`)
+            //    .setLabel('Add Anyway ✅')
+            //    .setStyle(ButtonStyle.Success);
 
-            const row = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(overrideButton);
+            //const row = new ActionRowBuilder<ButtonBuilder>()
+            //    .addComponents(overrideButton);
 
             const embed = new EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);
             await interaction.reply({
                 embeds: [embed],
-                components: [row],
+            //    components: [row],
                 ephemeral: true
             });
         } else {

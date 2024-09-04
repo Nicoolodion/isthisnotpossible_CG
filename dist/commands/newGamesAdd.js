@@ -48,18 +48,18 @@ const newGamesAddCommand = {
         const gamesList = (0, fileUtils_1.readJsonFile)(targetFile);
         const isGameOnList = gamesList.some((game) => game.name.toLowerCase() === gameName.toLowerCase());
         if (isGameOnList) {
-            const overrideButton = new discord_js_1.ButtonBuilder()
-                .setCustomId(`override-add-${hasTeamRole && !hasUploaderOrAdminRole ? 'pending' : ''}`)
-                .setLabel('Add Anyway ✅')
-                .setStyle(discord_js_1.ButtonStyle.Success);
-            const row = new discord_js_1.ActionRowBuilder()
-                .addComponents(overrideButton);
+            //const overrideButton = new ButtonBuilder()
+            //    .setCustomId(`override-add-${hasTeamRole && !hasUploaderOrAdminRole ? 'pending' : ''}`)
+            //    .setLabel('Add Anyway ✅')
+            //    .setStyle(ButtonStyle.Success);
+            //const row = new ActionRowBuilder<ButtonBuilder>()
+            //    .addComponents(overrideButton);
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);
             yield interaction.reply({
                 embeds: [embed],
-                components: [row],
+                //    components: [row],
                 ephemeral: true
             });
         }
