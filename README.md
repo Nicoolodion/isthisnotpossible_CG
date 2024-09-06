@@ -40,7 +40,9 @@ A Discord bot that checks on if a game can be cracked or not, including checking
 
 ## Configuration
 
-1. **JSON Files**: Ensure the `data` folder contains the following files:
+1. **SQLite Database**: Stores everything in a single .db file.
+
+   **depricated**:
    - `games.json` (List of games with their crack status and reasons)
    - `pending-games.json` (pending Games that need to be reviewed by Uploaders or Admins review)
 
@@ -99,4 +101,4 @@ Happy coding!
 - [!] ForceAdd doesn't work using the command for uploaders and Admins (and maybe normal two?) - Removed
 - [ ] improve logs
 
--- Development stopped due to not needing it anymore and already being to a satisfactory state --
+-- Development stopped due to it already being in a satisfactory state --
