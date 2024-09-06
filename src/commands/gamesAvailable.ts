@@ -15,7 +15,7 @@ const gamesAvailableCommand = {
 
         if (disabledUserIds.includes(interaction.user.id) || (!checkPermissions(userRoles, process.env.team ?? '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
             const embed = new EmbedBuilder()
-            .setColor('#FF0000')
+                .setColor('#FF0000')
                 .setDescription('You don\'t have permission to use this command.');
             await interaction.reply({ embeds: [embed], ephemeral: true });
             return;
@@ -24,22 +24,22 @@ const gamesAvailableCommand = {
         const gameName = interaction.options.get('name')?.value as string;
         if (!gameName) {
             const embed = new EmbedBuilder()
-            .setColor('#FF0000')
+                .setColor('#FF0000')
                 .setDescription('Please provide a game name.');
             await interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
 
-        const games = searchGames(gameName);
+        const games = await searchGames(gameName); // Use searchGames to search from the DB
 
         if (games.length === 0) {
             const embed = new EmbedBuilder()
-            .setColor('#FF0000')
+                .setColor('#FF0000')
                 .setDescription('Nothing has been found.');
             await interaction.reply({ embeds: [embed], ephemeral: true });
         } else if (games.length > 3) {
             const embed = new EmbedBuilder()
-            .setColor('#FF0000')
+                .setColor('#FF0000')
                 .setDescription('Too many results found. Please be more specific.');
             await interaction.reply({ embeds: [embed], ephemeral: true });
         } else {

@@ -37,7 +37,7 @@ const gamesAvailableCommand = {
             yield interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
-        const games = (0, gameUtils_1.searchGames)(gameName);
+        const games = yield (0, gameUtils_1.searchGames)(gameName); // Use searchGames to search from the DB
         if (games.length === 0) {
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')

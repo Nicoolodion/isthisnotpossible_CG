@@ -6,6 +6,7 @@ import gamesReviewsCommand from './commands/gamesReview';
 import { checkPermissions } from './utils/permissions';
 import deleteGamesCommand from './commands/deleteGamesCommand';
 import selectedGames from './commands/deleteGamesCommand';
+import sqlite3 from 'sqlite3';
 
 config();
 
@@ -15,6 +16,25 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]
+});
+
+const db = new sqlite3.Database('./database.db');
+
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS games (
+      name TEXT PRIMARY KEY,
+      cracked INTEGER,
+      reason TEXT
+    );
+  `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS pending_games (
+      name TEXT PRIMARY KEY,
+      cracked INTEGER,
+      reason TEXT
+    );
+  `);
 });
 
 // Log a message to the specified log channel
@@ -104,7 +124,7 @@ client.once('ready', async () => {
                         required: true,
                     }
                 ]
-            }    
+            }
         );
     }
 
@@ -134,6 +154,7 @@ client.on('interactionCreate', async interaction => {
         const input = options.get('name') ? `${options.get('name')?.value}` : undefined;
         const reason = options.get('reason') ? `${options.get('reason')?.value}` : undefined;
 
+        const start = performance.now();
         if (commandName === 'request-blacklist-info') {
             await gamesAvailableCommand.execute(interaction);
             await logToChannel(interaction, action, input, reason);
@@ -147,6 +168,9 @@ client.on('interactionCreate', async interaction => {
             await deleteGamesCommand.execute(interaction);
             await logToChannel(interaction, action, input);
         }
+
+        const end = performance.now();
+        console.log(`Responded to interaction in ${end - start}ms`);
     } else if (interaction.isButton() || interaction.isSelectMenu()) {
         const { customId, user } = interaction;
         const username = user.username;
@@ -182,5 +206,6 @@ client.on('interactionCreate', async interaction => {
         }
     }
 });
+
 
 client.login(process.env.discord_bot_token);

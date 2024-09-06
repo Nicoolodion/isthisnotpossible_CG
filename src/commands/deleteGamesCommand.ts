@@ -1,8 +1,6 @@
 import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
-import { searchGames } from '../utils/gameUtils';
-import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
-import { reloadCache } from '../utils/gameUtils';
+import { searchGames, removeGame } from '../utils/gameUtils';
 
 const deleteGamesCommand = {
     execute: async (interaction: CommandInteraction) => {
@@ -12,9 +10,10 @@ const deleteGamesCommand = {
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;
 
+        // Check permissions
         if (disabledUserIds.includes(interaction.user.id) || (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
             const embed = new EmbedBuilder()
-            .setColor('#FF0000')
+                .setColor('#FF0000')
                 .setDescription('You don\'t have permission to use this command.');
             await interaction.reply({ embeds: [embed], ephemeral: true });
             return;
@@ -26,7 +25,8 @@ const deleteGamesCommand = {
             return;
         }
 
-        const matchingGames = searchGames(gameName);
+        // Search for games in the database
+        const matchingGames = await searchGames(gameName);
 
         if (matchingGames.length === 0) {
             await interaction.reply({ content: `No games found matching "${gameName}".`, ephemeral: true });
@@ -85,14 +85,13 @@ const deleteGamesCommand = {
 
         // Store the games list for later use when the delete button is pressed
         (interaction.client as any)['matchingGames'] = matchingGames;
-        (interaction.client as any)['selectedGames'] = [];  
+        (interaction.client as any)['selectedGames'] = [];
     },
 
     handleInteraction: async (interaction: any) => {
         if (interaction.isButton()) {
             const matchingGames = interaction.client['matchingGames'];
             const selectedGames = interaction.client['selectedGames'];
-            
 
             if (interaction.customId === 'close') {
                 await interaction.update({
@@ -108,15 +107,15 @@ const deleteGamesCommand = {
                     return;
                 }
 
-                const games = readJsonFile('games.json');
-                const updatedGames = games.filter((game: any) => !selectedGames.includes(game.name));
-                writeJsonFile('games.json', updatedGames);
+                // Delete selected games from the database
+                for (const gameName of selectedGames) {
+                    await removeGame(gameName);
+                }
 
                 await interaction.update({
                     embeds: [new EmbedBuilder().setColor('#00ff00').setDescription("The selected games have been deleted from the main list.")],
                     components: [],
                 });
-                reloadCache();
             }
         } else if (interaction.isStringSelectMenu()) {
             const selectedGames = interaction.values;
@@ -129,7 +128,7 @@ const deleteGamesCommand = {
                 embeds: [new EmbedBuilder()
                     .setColor('#ff0000')
                     .setTitle('Selected Games')
-                    .setDescription(`Selected games to delete: ${selectedGames.join(', ')}`)],
+                    .setDescription(`Selected games to delete: **${selectedGames.join(', ')}**`)],
                 components: interaction.message.components
             });
         }

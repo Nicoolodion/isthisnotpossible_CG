@@ -1,8 +1,7 @@
 import { config } from 'dotenv';
-import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, ComponentType, EmbedBuilder } from 'discord.js';
+import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
-import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
-import { reloadCache } from '../utils/gameUtils';
+import { fetchAllPendingGames, approvePendingGame, removePendingGameFromDatabase } from '../utils/fileUtils';
 
 config();
 
@@ -16,13 +15,13 @@ const gamesReviewsCommand = {
 
         if (disabledUserIds.includes(interaction.user.id) || (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
             const embed = new EmbedBuilder()
-            .setColor('#FF0000')
+                .setColor('#FF0000')
                 .setDescription('You don\'t have permission to use this command.');
             await interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
 
-        const pendingGames = readJsonFile('pending-games.json');
+        const pendingGames = await fetchAllPendingGames(); // Fetch pending games from DB
 
         if (pendingGames.length === 0) {
             await interaction.reply({ content: "There are no pending games to review.", ephemeral: true });
@@ -57,16 +56,15 @@ const gamesReviewsCommand = {
             ephemeral: true
         });
     },
-    
+
     handleInteraction: async (interaction: any) => {
+        const pendingGames = await fetchAllPendingGames();
+
         if (interaction.isButton()) {
-            const pendingGames = readJsonFile('pending-games.json');
             if (interaction.customId === 'approve') {
-                const games = readJsonFile('games.json');
-                games.push(...pendingGames);
-                writeJsonFile('games.json', games);
-                writeJsonFile('pending-games.json', []);
-                reloadCache();
+                for (const game of pendingGames) {
+                    await approvePendingGame(game.name); // Approve and move games to the main list
+                }
                 await interaction.update({ 
                     embeds: [new EmbedBuilder()
                         .setColor('#0099ff')
@@ -101,11 +99,11 @@ const gamesReviewsCommand = {
                 });
             }
         } else if (interaction.isStringSelectMenu()) {
-            const pendingGames = readJsonFile('pending-games.json');
             const selectedIndexes = interaction.values.map((value: string) => parseInt(value));
-            const newPendingGames = pendingGames.filter((_: any, index: number) => !selectedIndexes.includes(index));
-            writeJsonFile('pending-games.json', newPendingGames);
-            reloadCache();
+            for (const index of selectedIndexes) {
+                const game = pendingGames[index];
+                await removePendingGameFromDatabase(game.name); // Remove selected pending games
+            }
             await interaction.update({ 
                 embeds: [new EmbedBuilder()
                     .setColor('#0099ff')

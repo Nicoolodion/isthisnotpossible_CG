@@ -1,8 +1,8 @@
 import { config } from 'dotenv';
 import { CommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
-import { readJsonFile, writeJsonFile } from '../utils/fileUtils';
-import { reloadCache } from '../utils/gameUtils';
+import { loadGames, addGame, addPendingGame } from '../utils/gameUtils';
+
 
 config();
 
@@ -39,7 +39,7 @@ const newGamesAddCommand = {
             addedMessage = `The game \`${gameName}\` has been added to the list.`;
         }
 
-        const gamesList = readJsonFile(targetFile);
+        const gamesList = await loadGames();
         const isGameOnList = gamesList.some((game: any) => game.name.toLowerCase() === gameName.toLowerCase());
 
         if (isGameOnList) {
@@ -66,8 +66,11 @@ const newGamesAddCommand = {
                 reason: reason
             };
 
-            gamesList.push(newGame);
-            writeJsonFile(targetFile, gamesList);
+            if (hasTeamRole && !hasUploaderOrAdminRole) {
+                await addPendingGame(newGame);
+            } else {
+                await addGame(newGame);
+            }
 
             const embed = new EmbedBuilder()
                 .setColor('#00FF00')
@@ -76,13 +79,12 @@ const newGamesAddCommand = {
                 .setFooter({ text: 'Thanks for contributing!' })
                 .setTimestamp()
             await interaction.reply({ embeds: [embed], ephemeral: true });
-            reloadCache();  // Reload cache after adding a game
         }
     },
 
     handleInteraction: async (interaction: any) => {
         if (interaction.isButton()) {
-            const customId = interaction.customId;
+            const customId = interaction.customId
             const isPendingOverride = customId === 'override-add-pending';
 
             // Extract the game name and reason from the message content
@@ -90,25 +92,23 @@ const newGamesAddCommand = {
             const reasonMatch = interaction.message.content.match(/Reason provided: `([^`]*)`/);
             const gameName = gameNameMatch ? gameNameMatch[1] : null;
             const reason = reasonMatch ? reasonMatch[1] : 'No reason provided';
-
             if (!gameName) {
                 await interaction.reply({ content: 'Error: Game name could not be determined.', ephemeral: true });
                 return;
             }
-
             const newGame = {
                 name: gameName,
                 cracked: false,
-                ...(reason.trim() && reason.trim() !== 'No reason provided' ? { reason: reason.trim() } : {})
-            };
+                reason: reason.trim() || 'No reason provided'
+              };
 
             const targetFile = isPendingOverride ? 'pending-games.json' : 'games.json';
-            const gamesList = readJsonFile(targetFile);
-            gamesList.push(newGame);
-            writeJsonFile(targetFile, gamesList);
-
+            if (isPendingOverride) {
+                await addPendingGame(newGame);
+            } else {
+                await addGame(newGame);
+            }
             await interaction.update({ content: `The game \`${gameName}\` has been added to the ${isPendingOverride ? 'pending list' : 'list'} despite being already present.`, components: [] });
-            reloadCache();  // Reload cache after adding a game
         }
     }
 };

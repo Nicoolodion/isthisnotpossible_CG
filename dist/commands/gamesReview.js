@@ -13,7 +13,6 @@ const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
 const fileUtils_1 = require("../utils/fileUtils");
-const gameUtils_1 = require("../utils/gameUtils");
 (0, dotenv_1.config)();
 const gamesReviewsCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
@@ -30,7 +29,7 @@ const gamesReviewsCommand = {
             yield interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
-        const pendingGames = (0, fileUtils_1.readJsonFile)('pending-games.json');
+        const pendingGames = yield (0, fileUtils_1.fetchAllPendingGames)(); // Fetch pending games from DB
         if (pendingGames.length === 0) {
             yield interaction.reply({ content: "There are no pending games to review.", ephemeral: true });
             return;
@@ -58,14 +57,12 @@ const gamesReviewsCommand = {
         });
     }),
     handleInteraction: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
+        const pendingGames = yield (0, fileUtils_1.fetchAllPendingGames)();
         if (interaction.isButton()) {
-            const pendingGames = (0, fileUtils_1.readJsonFile)('pending-games.json');
             if (interaction.customId === 'approve') {
-                const games = (0, fileUtils_1.readJsonFile)('games.json');
-                games.push(...pendingGames);
-                (0, fileUtils_1.writeJsonFile)('games.json', games);
-                (0, fileUtils_1.writeJsonFile)('pending-games.json', []);
-                (0, gameUtils_1.reloadCache)();
+                for (const game of pendingGames) {
+                    yield (0, fileUtils_1.approvePendingGame)(game.name); // Approve and move games to the main list
+                }
                 yield interaction.update({
                     embeds: [new discord_js_1.EmbedBuilder()
                             .setColor('#0099ff')
@@ -100,11 +97,11 @@ const gamesReviewsCommand = {
             }
         }
         else if (interaction.isStringSelectMenu()) {
-            const pendingGames = (0, fileUtils_1.readJsonFile)('pending-games.json');
             const selectedIndexes = interaction.values.map((value) => parseInt(value));
-            const newPendingGames = pendingGames.filter((_, index) => !selectedIndexes.includes(index));
-            (0, fileUtils_1.writeJsonFile)('pending-games.json', newPendingGames);
-            (0, gameUtils_1.reloadCache)();
+            for (const index of selectedIndexes) {
+                const game = pendingGames[index];
+                yield (0, fileUtils_1.removePendingGameFromDatabase)(game.name); // Remove selected pending games
+            }
             yield interaction.update({
                 embeds: [new discord_js_1.EmbedBuilder()
                         .setColor('#0099ff')

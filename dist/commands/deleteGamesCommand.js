@@ -12,8 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
 const gameUtils_1 = require("../utils/gameUtils");
-const fileUtils_1 = require("../utils/fileUtils");
-const gameUtils_2 = require("../utils/gameUtils");
 const deleteGamesCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b, _c, _d;
@@ -22,6 +20,7 @@ const deleteGamesCommand = {
         const overrides = require('../data/permissions.json').overrides['delete-games'];
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;
+        // Check permissions
         if (disabledUserIds.includes(interaction.user.id) || (!(0, permissions_1.checkPermissions)(userRoles, (_b = process.env.admin) !== null && _b !== void 0 ? _b : '') && !(0, permissions_1.checkPermissions)(userRoles, (_c = process.env.uploader) !== null && _c !== void 0 ? _c : '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
@@ -34,7 +33,8 @@ const deleteGamesCommand = {
             yield interaction.reply({ content: "Please provide a game name to search for.", ephemeral: true });
             return;
         }
-        const matchingGames = (0, gameUtils_1.searchGames)(gameName);
+        // Search for games in the database
+        const matchingGames = yield (0, gameUtils_1.searchGames)(gameName);
         if (matchingGames.length === 0) {
             yield interaction.reply({ content: `No games found matching "${gameName}".`, ephemeral: true });
             return;
@@ -103,14 +103,14 @@ const deleteGamesCommand = {
                     });
                     return;
                 }
-                const games = (0, fileUtils_1.readJsonFile)('games.json');
-                const updatedGames = games.filter((game) => !selectedGames.includes(game.name));
-                (0, fileUtils_1.writeJsonFile)('games.json', updatedGames);
+                // Delete selected games from the database
+                for (const gameName of selectedGames) {
+                    yield (0, gameUtils_1.removeGame)(gameName);
+                }
                 yield interaction.update({
                     embeds: [new discord_js_1.EmbedBuilder().setColor('#00ff00').setDescription("The selected games have been deleted from the main list.")],
                     components: [],
                 });
-                (0, gameUtils_2.reloadCache)();
             }
         }
         else if (interaction.isStringSelectMenu()) {
@@ -122,7 +122,7 @@ const deleteGamesCommand = {
                 embeds: [new discord_js_1.EmbedBuilder()
                         .setColor('#ff0000')
                         .setTitle('Selected Games')
-                        .setDescription(`Selected games to delete: ${selectedGames.join(', ')}`)],
+                        .setDescription(`Selected games to delete: **${selectedGames.join(', ')}**`)],
                 components: interaction.message.components
             });
         }

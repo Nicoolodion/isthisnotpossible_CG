@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
-const fileUtils_1 = require("../utils/fileUtils");
 const gameUtils_1 = require("../utils/gameUtils");
 (0, dotenv_1.config)();
 const newGamesAddCommand = {
@@ -45,7 +44,7 @@ const newGamesAddCommand = {
             alreadyOnListMessage = `The game \`${gameName}\` is already on the list.`;
             addedMessage = `The game \`${gameName}\` has been added to the list.`;
         }
-        const gamesList = (0, fileUtils_1.readJsonFile)(targetFile);
+        const gamesList = yield (0, gameUtils_1.loadGames)();
         const isGameOnList = gamesList.some((game) => game.name.toLowerCase() === gameName.toLowerCase());
         if (isGameOnList) {
             //const overrideButton = new ButtonBuilder()
@@ -69,8 +68,12 @@ const newGamesAddCommand = {
                 cracked: false,
                 reason: reason
             };
-            gamesList.push(newGame);
-            (0, fileUtils_1.writeJsonFile)(targetFile, gamesList);
+            if (hasTeamRole && !hasUploaderOrAdminRole) {
+                yield (0, gameUtils_1.addPendingGame)(newGame);
+            }
+            else {
+                yield (0, gameUtils_1.addGame)(newGame);
+            }
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#00FF00')
                 .setTitle(`**${hasTeamRole && !hasUploaderOrAdminRole ? 'Game Submitted for Review!' : 'Game Added!'}**`)
@@ -78,7 +81,6 @@ const newGamesAddCommand = {
                 .setFooter({ text: 'Thanks for contributing!' })
                 .setTimestamp();
             yield interaction.reply({ embeds: [embed], ephemeral: true });
-            (0, gameUtils_1.reloadCache)(); // Reload cache after adding a game
         }
     }),
     handleInteraction: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
@@ -94,13 +96,19 @@ const newGamesAddCommand = {
                 yield interaction.reply({ content: 'Error: Game name could not be determined.', ephemeral: true });
                 return;
             }
-            const newGame = Object.assign({ name: gameName, cracked: false }, (reason.trim() && reason.trim() !== 'No reason provided' ? { reason: reason.trim() } : {}));
+            const newGame = {
+                name: gameName,
+                cracked: false,
+                reason: reason.trim() || 'No reason provided'
+            };
             const targetFile = isPendingOverride ? 'pending-games.json' : 'games.json';
-            const gamesList = (0, fileUtils_1.readJsonFile)(targetFile);
-            gamesList.push(newGame);
-            (0, fileUtils_1.writeJsonFile)(targetFile, gamesList);
+            if (isPendingOverride) {
+                yield (0, gameUtils_1.addPendingGame)(newGame);
+            }
+            else {
+                yield (0, gameUtils_1.addGame)(newGame);
+            }
             yield interaction.update({ content: `The game \`${gameName}\` has been added to the ${isPendingOverride ? 'pending list' : 'list'} despite being already present.`, components: [] });
-            (0, gameUtils_1.reloadCache)(); // Reload cache after adding a game
         }
     })
 };

@@ -18,6 +18,7 @@ const gamesAvailable_1 = __importDefault(require("./commands/gamesAvailable"));
 const newGamesAdd_1 = __importDefault(require("./commands/newGamesAdd"));
 const gamesReview_1 = __importDefault(require("./commands/gamesReview"));
 const deleteGamesCommand_1 = __importDefault(require("./commands/deleteGamesCommand"));
+const sqlite3_1 = __importDefault(require("sqlite3"));
 (0, dotenv_1.config)();
 const client = new discord_js_1.Client({
     intents: [
@@ -25,6 +26,23 @@ const client = new discord_js_1.Client({
         discord_js_1.GatewayIntentBits.GuildMessages,
         discord_js_1.GatewayIntentBits.MessageContent
     ]
+});
+const db = new sqlite3_1.default.Database('./database.db');
+db.serialize(() => {
+    db.run(`
+    CREATE TABLE IF NOT EXISTS games (
+      name TEXT PRIMARY KEY,
+      cracked INTEGER,
+      reason TEXT
+    );
+  `);
+    db.run(`
+    CREATE TABLE IF NOT EXISTS pending_games (
+      name TEXT PRIMARY KEY,
+      cracked INTEGER,
+      reason TEXT
+    );
+  `);
 });
 // Log a message to the specified log channel
 function logToChannel(interaction, action, input, reason) {
@@ -129,6 +147,7 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             : `\`/${commandName}\``;
         const input = options.get('name') ? `${(_b = options.get('name')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
         const reason = options.get('reason') ? `${(_c = options.get('reason')) === null || _c === void 0 ? void 0 : _c.value}` : undefined;
+        const start = performance.now();
         if (commandName === 'request-blacklist-info') {
             yield gamesAvailable_1.default.execute(interaction);
             yield logToChannel(interaction, action, input, reason);
@@ -145,12 +164,15 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             yield deleteGamesCommand_1.default.execute(interaction);
             yield logToChannel(interaction, action, input);
         }
+        const end = performance.now();
+        console.log(`Responded to interaction in ${end - start}ms`);
     }
     else if (interaction.isButton() || interaction.isSelectMenu()) {
         const { customId, user } = interaction;
         const username = user.username;
         const userId = user.id;
         let action;
+        let input;
         if (customId === 'override-add') {
             yield newGamesAdd_1.default.handleInteraction(interaction);
             action = showID
