@@ -132,7 +132,7 @@ client.once('ready', async () => {
                         name: 'name',
                         type: 3, // String
                         description: 'The Steam store URL or App ID of the game',
-                        required: true,
+                        required: false,
                     }
                 ]
             }

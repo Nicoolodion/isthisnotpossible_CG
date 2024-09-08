@@ -132,7 +132,7 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
                     name: 'name',
                     type: 3, // String
                     description: 'The Steam store URL or App ID of the game',
-                    required: true,
+                    required: false,
                 }
             ]
         });

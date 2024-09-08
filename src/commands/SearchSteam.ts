@@ -1,45 +1,30 @@
-import { CommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { CommandInteraction, EmbedBuilder } from 'discord.js';
 import axios from 'axios';
-import { wrapper } from 'axios-cookiejar-support'; // Support for cookies
-import { CookieJar } from 'tough-cookie'; // Cookie jar for managing cookies
+import { wrapper } from 'axios-cookiejar-support';
+import { CookieJar } from 'tough-cookie';
 import * as cheerio from 'cheerio';
-import { addPendingGameToDatabase } from '../utils/fileUtils'; // Import the function to add games to database
-import { searchGamesExact } from '../utils/gameUtils'; // Import the function to search games in the database
-import puppeteer from 'puppeteer';
+import { addPendingGameToDatabase } from '../utils/fileUtils';
+import { searchGamesExact } from '../utils/gameUtils';
 
-// Keywords to search for on the Steam page (add more as needed)
-const keywords = ['Denuvo', 'Requires 3rd-Party Account'];
+// Keywords to search for on the Steam page
+const keywords = ['Denuvo', 'Activision Account', 'Warframe Account', 'background use required', 'EA online activation' ];
 
 // Function to check the Steam page
 async function checkSteamPage(url: string): Promise<{ isClean: boolean; reason: string | null; gameName: string }> {
     try {
-        // Create a cookie jar to handle cookies
         const cookieJar = new CookieJar();
-
-        // Wrap axios to support cookies with the jar
         const client = wrapper(axios.create({ jar: cookieJar }));
-
-        // Add User-Agent to mimic a real browser request
         const response = await client.get(url, {
             headers: {
-                'User-Agent':
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
             },
         });
 
-        // Load the page content with cheerio
         const $ = cheerio.load(response.data);
+        const gameName = $('#appHubAppName').text().trim();
+        const drmNotice = $('.DRM_notice').text();
+        const pageContent = drmNotice.toLowerCase();
 
-        const gameName = $('#appHubAppName').text().trim(); // Adjust selector if needed
-
-        // Target specific sections of the Steam page
-        const drmNotice = $('.DRM_notice').text(); // DRM notice section (if available)
-        const fullContent = [drmNotice].join(' ');
-
-        // Convert page content to lowercase for case-insensitive comparison
-        const pageContent = fullContent.toLowerCase();
-
-        // Determine if any keywords are found
         for (const keyword of keywords) {
             if (pageContent.includes(keyword.toLowerCase())) {
                 return { gameName, isClean: false, reason: keyword };
@@ -49,7 +34,7 @@ async function checkSteamPage(url: string): Promise<{ isClean: boolean; reason: 
         return { gameName, isClean: true, reason: null };
     } catch (error: any) {
         console.error('Error fetching Steam page:', error.message);
-        return { gameName: 'Error Fetching game', isClean: false, reason: 'Error fetching page' }; // Default to false in case of an error
+        return { gameName: 'Error Fetching game', isClean: false, reason: 'Error fetching page' };
     }
 }
 
@@ -58,31 +43,64 @@ function buildSteamUrl(appId: string): string {
     return `https://store.steampowered.com/app/${appId}`;
 }
 
+// Function to get top games from Steam
+async function getTopSteamGames(): Promise<string[]> {
+    const gameLinks: string[] = [];
+
+    try {
+        let currentPage = 1;
+        let totalGamesFetched = 0;
+        const gamesPerPage = 50;
+        const maxGames = 50;
+
+        while (totalGamesFetched < maxGames) {
+            const response = await axios.get(`https://store.steampowered.com/search/?filter=topsellers&page=${currentPage}`);
+            const $ = cheerio.load(response.data);
+
+            $('.search_result_row').each((i, element) => {
+                const link = $(element).attr('href');
+                if (link && gameLinks.length < maxGames) {
+                    gameLinks.push(link);
+                }
+            });
+
+            totalGamesFetched = gameLinks.length;
+            currentPage++;
+
+            // If no more results are found, break the loop
+            if ($('.search_result_row').length === 0) {
+                break;
+            }
+        }
+
+        console.log('getTopSteamGames: Found', gameLinks.length, 'games on Steam.');
+        return gameLinks;
+    } catch (error: any) {
+        console.error('Error fetching top Steam games:', error.message);
+        return [];
+    }
+}
+
 export async function execute(interaction: CommandInteraction) {
     const input = interaction.options.get('name')?.value as string;
+    await interaction.deferReply({ ephemeral: true });
 
     if (input) {
-        await interaction.deferReply({ ephemeral: true }); // Defer the initial reply, only visible to the user
-
-        // Determine if the input is a URL or a Steam App ID
+        // Process the provided game URL or ID
         let url: string;
 
         if (input.startsWith('http')) {
-            // If input starts with 'http', treat it as a URL
             url = input;
         } else {
-            // Otherwise, assume it's a Steam App ID and build the URL
             url = buildSteamUrl(input);
         }
 
         const { isClean, reason, gameName } = await checkSteamPage(url);
 
         if (gameName) {
-            // Search the database for the game
             const existingGames = await searchGamesExact(gameName);
 
             if (existingGames.length === 0) {
-                // Create embed response
                 const embed = new EmbedBuilder()
                     .setColor(isClean ? '#00FF00' : '#FF0000')
                     .setTitle(isClean ? 'Game is Crackable' : 'Game Contains DRM')
@@ -94,12 +112,9 @@ export async function execute(interaction: CommandInteraction) {
                     )
                     .setTimestamp();
 
-                // Send response
                 await interaction.followUp({ embeds: [embed], ephemeral: true });
 
-                // Add to pending games list
                 try {
-                    // If clean, set `cracked` to true and no reason
                     await addPendingGameToDatabase(gameName, isClean, isClean ? null : reason);
                 } catch (err) {
                     console.error('Error adding game to pending list:', err);
@@ -123,12 +138,42 @@ export async function execute(interaction: CommandInteraction) {
             await interaction.followUp({ embeds: [embed], ephemeral: true });
         }
     } else {
-        const embed = new EmbedBuilder()
-            .setColor('#FF0000')
-            .setTitle('Error')
-            .setDescription('Please provide a valid Steam store URL or App ID.')
-            .setTimestamp();
+        // No game URL or ID provided, search top games
+        const topGameLinks = await getTopSteamGames();
 
-        await interaction.followUp({ embeds: [embed], ephemeral: true });
+        if (topGameLinks.length > 0) {
+            const games = topGameLinks.map(url => checkSteamPage(url));
+            const results = await Promise.all(games);
+
+            for (const { isClean, reason, gameName } of results) {
+                if (gameName) {
+                    const existingGames = await searchGamesExact(gameName);
+
+                    if (existingGames.length === 0) {
+                        try {
+                            await addPendingGameToDatabase(gameName, isClean, isClean ? null : reason);
+                        } catch (err) {
+                            console.error('Error adding game to pending list:', err);
+                        }
+                    }
+                }
+            }
+
+            const embed = new EmbedBuilder()
+                .setColor('#00FF00')
+                .setTitle('Top Games Processed')
+                .setDescription('The top games have been checked and added to the pending games list if applicable.')
+                .setTimestamp();
+
+            await interaction.followUp({ embeds: [embed], ephemeral: true });
+        } else {
+            const embed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setTitle('Error')
+                .setDescription('Failed to fetch the top games from Steam.')
+                .setTimestamp();
+
+            await interaction.followUp({ embeds: [embed], ephemeral: true });
+        }
     }
 }

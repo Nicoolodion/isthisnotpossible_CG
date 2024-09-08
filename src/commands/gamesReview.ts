@@ -5,6 +5,10 @@ import { fetchAllPendingGames, approvePendingGame, removePendingGameFromDatabase
 
 config();
 
+const MAX_DESCRIPTION_LENGTH = 4096; // Discord limit for description length
+const GAMES_PER_EMBED = 10; // Number of games per embed
+const MAX_OPTIONS_PER_MENU = 25; // Maximum options in a select menu
+
 const gamesReviewsCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
@@ -28,15 +32,26 @@ const gamesReviewsCommand = {
             return;
         }
 
-        // Create an embed for the list of pending games
-        const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('Pending Games for Review')
-            .setDescription(pendingGames.map((game: { name: string; cracked: boolean; reason?: string }) => 
-                `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}`
-            ).join('\n\n'))
-            .setTimestamp();
+        // Split the game list into multiple embeds
+        const embeds = [];
+        let currentDescription = '';
 
+        pendingGames.forEach((game: { name: string; cracked: boolean; reason?: string }, index: number) => {
+            const gameDetails = `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}\n\n`;
+
+            if ((currentDescription + gameDetails).length > MAX_DESCRIPTION_LENGTH) {
+                embeds.push(new EmbedBuilder().setColor('#0099ff').setTitle(`Pending Games for Review (Page ${embeds.length + 1})`).setDescription(currentDescription).setTimestamp());
+                currentDescription = '';
+            }
+
+            currentDescription += gameDetails;
+        });
+
+        if (currentDescription) {
+            embeds.push(new EmbedBuilder().setColor('#0099ff').setTitle(`Pending Games for Review (Page ${embeds.length + 1})`).setDescription(currentDescription).setTimestamp());
+        }
+
+        // Create buttons for approval and removal
         const approveButton = new ButtonBuilder()
             .setCustomId('approve')
             .setLabel('Approve ✅')
@@ -51,7 +66,7 @@ const gamesReviewsCommand = {
             .addComponents(approveButton, removeButton);
 
         await interaction.reply({
-            embeds: [embed],
+            embeds: embeds,
             components: [row],
             ephemeral: true
         });
@@ -75,43 +90,53 @@ const gamesReviewsCommand = {
                     components: [] 
                 });
             } else if (interaction.customId === 'remove') {
-                const options = pendingGames.map((game: any, index: number) => ({
-                    label: game.name,
-                    value: index.toString()
-                }));
+                const selectMenus = [];
+                for (let i = 0; i < pendingGames.length; i += MAX_OPTIONS_PER_MENU) {
+                    const chunk = pendingGames.slice(i, i + MAX_OPTIONS_PER_MENU);
+                    const options = chunk.map((game: any, index: number) => ({
+                        label: game.name,
+                        value: (i + index).toString() // Use the absolute index as the value
+                    }));
 
-                const selectMenu = new StringSelectMenuBuilder()
-                    .setCustomId('remove-select')
-                    .setPlaceholder('Select games to remove')
-                    .setMinValues(1)
-                    .setMaxValues(options.length)
-                    .addOptions(options);
+                    const selectMenu = new StringSelectMenuBuilder()
+                        .setCustomId(`remove-select-${i}`)
+                        .setPlaceholder('Select games to remove')
+                        .setMinValues(1)
+                        .setMaxValues(options.length)
+                        .addOptions(options);
 
-                const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
-                await interaction.update({ 
+                    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+                    selectMenus.push(row);
+                }
+
+                await interaction.update({
                     embeds: [new EmbedBuilder()
                         .setColor('#0099ff')
                         .setTitle('Select Games to Remove')
                         .setDescription("Select the games to remove from the pending list:")
                         .setTimestamp()
                     ],
-                    components: [row] 
+                    components: selectMenus
                 });
             }
         } else if (interaction.isStringSelectMenu()) {
+            // Defer the interaction response to keep it alive while processing
+            await interaction.deferUpdate();
+
             const selectedIndexes = interaction.values.map((value: string) => parseInt(value));
             for (const index of selectedIndexes) {
                 const game = pendingGames[index];
                 await removePendingGameFromDatabase(game.name); // Remove selected pending games
             }
-            await interaction.update({ 
+
+            await interaction.editReply({
                 embeds: [new EmbedBuilder()
                     .setColor('#0099ff')
                     .setTitle('Update Status')
                     .setDescription("The selected games have been removed from the pending list.")
                     .setTimestamp()
                 ],
-                components: [] 
+                components: [] // Remove the components after the interaction is complete
             });
         }
     }

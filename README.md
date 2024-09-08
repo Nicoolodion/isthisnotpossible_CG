@@ -100,6 +100,5 @@ Happy coding!
 - [ ] make it show the gamename in the log when removing it using game-review
 - [!] ForceAdd doesn't work using the command for uploaders and Admins (and maybe normal two?) - Removed
 - [ ] improve logs
-- [ ] look at add duplicate issues
 
 -- Development stopped due to it already being in a satisfactory state --

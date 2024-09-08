@@ -44,7 +44,7 @@ const gamesAvailableCommand = {
                 .setDescription('Nothing has been found.');
             yield interaction.reply({ embeds: [embed], ephemeral: true });
         }
-        else if (games.length > 3) {
+        else if (games.length > 6) {
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription('Too many results found. Please be more specific.');
@@ -54,7 +54,7 @@ const gamesAvailableCommand = {
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#008000')
                 .setDescription(games
-                .slice(0, 3) // Only show up to 3 results
+                .slice(0, 6) // Only show up to 6 results
                 .map(game => `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}`)
                 .join('\n\n')); // Separate each game with a double newline for readability
             yield interaction.reply({ embeds: [embed], ephemeral: true });
