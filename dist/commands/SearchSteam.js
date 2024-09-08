@@ -36,6 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.execute = void 0;
+const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const axios_1 = __importDefault(require("axios"));
 const axios_cookiejar_support_1 = require("axios-cookiejar-support");
@@ -43,6 +44,8 @@ const tough_cookie_1 = require("tough-cookie");
 const cheerio = __importStar(require("cheerio"));
 const fileUtils_1 = require("../utils/fileUtils");
 const gameUtils_1 = require("../utils/gameUtils");
+const permissions_1 = require("../utils/permissions");
+(0, dotenv_1.config)();
 // Keywords to search for on the Steam page
 const keywords = ['Denuvo', 'Activision Account', 'Warframe Account', 'background use required', 'EA online activation'];
 // Function to check the Steam page
@@ -113,8 +116,20 @@ function getTopSteamGames() {
 }
 function execute(interaction) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a;
-        const input = (_a = interaction.options.get('name')) === null || _a === void 0 ? void 0 : _a.value;
+        var _a, _b, _c, _d;
+        const userRoles = (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.roles;
+        const { adminUserId } = require('../data/permissions.json');
+        const overrides = require('../data/permissions.json').overrides['review-games'];
+        const allowedUserIds = overrides.allow;
+        const disabledUserIds = overrides.deny;
+        if (disabledUserIds.includes(interaction.user.id) || (!(0, permissions_1.checkPermissions)(userRoles, (_b = process.env.admin) !== null && _b !== void 0 ? _b : '') && !(0, permissions_1.checkPermissions)(userRoles, (_c = process.env.uploader) !== null && _c !== void 0 ? _c : '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription('You don\'t have permission to use this command.');
+            yield interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+        }
+        const input = (_d = interaction.options.get('name')) === null || _d === void 0 ? void 0 : _d.value;
         yield interaction.deferReply({ ephemeral: true });
         if (input) {
             // Process the provided game URL or ID

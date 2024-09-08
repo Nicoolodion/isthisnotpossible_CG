@@ -1,3 +1,4 @@
+import { config } from 'dotenv';
 import { CommandInteraction, EmbedBuilder } from 'discord.js';
 import axios from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
@@ -5,13 +6,18 @@ import { CookieJar } from 'tough-cookie';
 import * as cheerio from 'cheerio';
 import { addPendingGameToDatabase } from '../utils/fileUtils';
 import { searchGamesExact } from '../utils/gameUtils';
+import { checkPermissions } from '../utils/permissions';
+
+config();
 
 // Keywords to search for on the Steam page
 const keywords = ['Denuvo', 'Activision Account', 'Warframe Account', 'background use required', 'EA online activation' ];
 
 // Function to check the Steam page
 async function checkSteamPage(url: string): Promise<{ isClean: boolean; reason: string | null; gameName: string }> {
+
     try {
+
         const cookieJar = new CookieJar();
         const client = wrapper(axios.create({ jar: cookieJar }));
         const response = await client.get(url, {
@@ -82,6 +88,20 @@ async function getTopSteamGames(): Promise<string[]> {
 }
 
 export async function execute(interaction: CommandInteraction) {
+    const userRoles = interaction.member?.roles as any;
+    const { adminUserId } = require('../data/permissions.json');
+    const overrides = require('../data/permissions.json').overrides['review-games'];
+    const allowedUserIds = overrides.allow;
+    const disabledUserIds = overrides.deny;
+
+    if (disabledUserIds.includes(interaction.user.id) || (!checkPermissions(userRoles, process.env.admin ?? '') && !checkPermissions(userRoles, process.env.uploader ?? '') && interaction.user.id !== adminUserId && !allowedUserIds.includes(interaction.user.id))) {
+        const embed = new EmbedBuilder()
+            .setColor('#FF0000')
+            .setDescription('You don\'t have permission to use this command.');
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+        return;
+    }
+
     const input = interaction.options.get('name')?.value as string;
     await interaction.deferReply({ ephemeral: true });
 
@@ -177,3 +197,4 @@ export async function execute(interaction: CommandInteraction) {
         }
     }
 }
+
