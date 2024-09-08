@@ -15,8 +15,7 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
 db.serialize(() => {
     // Use WAL mode for better performance in write-heavy workloads
     db.run('PRAGMA journal_mode = WAL;');
-    db.run('PRAGMA cache_size = 10000;'); // Increase cache size
-
+    db.run('PRAGMA cache_size = 10000;');
     // Create tables with indexes
     db.run(`
         CREATE TABLE IF NOT EXISTS games (
@@ -136,23 +135,27 @@ export function removePendingGameFromDatabase(name: string): Promise<void> {
 // Move a pending game to the main games list
 export function approvePendingGame(name: string): Promise<void> {
     return new Promise(async (resolve, reject) => {
-        const transaction = (db as any).transaction();
         try {
             const pendingGame = await fetchPendingGameByName(name);
             if (!pendingGame) throw new Error('Game not found in pending list');
 
             // Start transaction
-            transaction.begin();
+            await db.run('BEGIN TRANSACTION');
 
             await addGameToDatabase(pendingGame.name, pendingGame.cracked, pendingGame.reason);
             await removePendingGameFromDatabase(name);
 
             // Commit transaction
-            transaction.commit();
+            await db.run('COMMIT');
             resolve();
         } catch (err) {
             console.error('Error approving pending game:', err);
-            transaction.rollback();
+            try {
+                // Rollback transaction if something fails
+                await db.run('ROLLBACK');
+            } catch (error) {
+                console.error('Error rolling back transaction:', error);
+            }
             reject(err);
         }
     });

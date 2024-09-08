@@ -3,9 +3,8 @@ import { Client, GatewayIntentBits, REST, Routes, TextChannel, EmbedBuilder, Int
 import gamesAvailableCommand from './commands/gamesAvailable';
 import newGamesAddCommand from './commands/newGamesAdd';
 import gamesReviewsCommand from './commands/gamesReview';
-import { checkPermissions } from './utils/permissions';
 import deleteGamesCommand from './commands/deleteGamesCommand';
-import selectedGames from './commands/deleteGamesCommand';
+import { execute as checkSteamPageExecute } from './commands/SearchSteam'; // Import the execute function from the command file
 import sqlite3 from 'sqlite3';
 
 config();
@@ -18,7 +17,7 @@ const client = new Client({
     ]
 });
 
-const db = new sqlite3.Database('./database.db');
+const db = new sqlite3.Database('.//database.db');
 
 db.serialize(() => {
   db.run(`
@@ -124,6 +123,18 @@ client.once('ready', async () => {
                         required: true,
                     }
                 ]
+            },
+            {
+                name: 'checksteam',
+                description: 'Search for games on Steam',
+                options: [
+                    {
+                        name: 'name',
+                        type: 3, // String
+                        description: 'The Steam store URL or App ID of the game',
+                        required: true,
+                    }
+                ]
             }
         );
     }
@@ -166,6 +177,9 @@ client.on('interactionCreate', async interaction => {
             await logToChannel(interaction, action, input);
         } else if (commandName === 'delete-games') {
             await deleteGamesCommand.execute(interaction);
+            await logToChannel(interaction, action, input);
+        } else if (commandName === 'checksteam') {
+            await checkSteamPageExecute(interaction); // Call the execute function from SearchSteam
             await logToChannel(interaction, action, input);
         }
 

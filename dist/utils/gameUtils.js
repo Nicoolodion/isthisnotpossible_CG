@@ -12,7 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addPendingGame = exports.removeGame = exports.addGame = exports.searchGames = exports.loadGames = void 0;
+exports.addPendingGame = exports.removeGame = exports.addGame = exports.searchGamesExact = exports.searchGames = exports.loadGames = void 0;
+const fuse_js_1 = __importDefault(require("fuse.js"));
 const fileUtils_1 = require("./fileUtils");
 let gamesCache = null; // Cache for games
 // Load games from the database into cache
@@ -32,19 +33,32 @@ function loadGames() {
     });
 }
 exports.loadGames = loadGames;
-const flexsearch_1 = __importDefault(require("flexsearch"));
 function searchGames(name) {
     return __awaiter(this, void 0, void 0, function* () {
         const games = yield loadGames();
-        const index = flexsearch_1.default.create({
-            tokenize: 'full',
+        // Perform fuzzy search on the loaded games
+        const fuse = new fuse_js_1.default(games, {
+            keys: ['name'],
+            threshold: 0.2
         });
-        games.forEach((game, i) => index.add(i, game.name));
-        const result = index.search(name);
-        return result.map((id) => games[Number(id)]);
+        const result = fuse.search(name);
+        return result.map(res => res.item);
     });
 }
 exports.searchGames = searchGames;
+function searchGamesExact(name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const games = yield loadGames();
+        // Perform fuzzy search on the loaded games
+        const fuse = new fuse_js_1.default(games, {
+            keys: ['name'],
+            threshold: 0.05
+        });
+        const result = fuse.search(name);
+        return result.map(res => res.item);
+    });
+}
+exports.searchGamesExact = searchGamesExact;
 function addGame(game) {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, fileUtils_1.addGameToDatabase)(game.name, game.cracked, game.reason);

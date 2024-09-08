@@ -18,6 +18,7 @@ const gamesAvailable_1 = __importDefault(require("./commands/gamesAvailable"));
 const newGamesAdd_1 = __importDefault(require("./commands/newGamesAdd"));
 const gamesReview_1 = __importDefault(require("./commands/gamesReview"));
 const deleteGamesCommand_1 = __importDefault(require("./commands/deleteGamesCommand"));
+const SearchSteam_1 = require("./commands/SearchSteam"); // Import the execute function from the command file
 const sqlite3_1 = __importDefault(require("sqlite3"));
 (0, dotenv_1.config)();
 const client = new discord_js_1.Client({
@@ -27,7 +28,7 @@ const client = new discord_js_1.Client({
         discord_js_1.GatewayIntentBits.MessageContent
     ]
 });
-const db = new sqlite3_1.default.Database('./database.db');
+const db = new sqlite3_1.default.Database('.//database.db');
 db.serialize(() => {
     db.run(`
     CREATE TABLE IF NOT EXISTS games (
@@ -123,6 +124,17 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
                     required: true,
                 }
             ]
+        }, {
+            name: 'checksteam',
+            description: 'Search for games on Steam',
+            options: [
+                {
+                    name: 'name',
+                    type: 3, // String
+                    description: 'The Steam store URL or App ID of the game',
+                    required: true,
+                }
+            ]
         });
     }
     const rest = new discord_js_1.REST({ version: '10' }).setToken(process.env.discord_bot_token);
@@ -162,6 +174,10 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         }
         else if (commandName === 'delete-games') {
             yield deleteGamesCommand_1.default.execute(interaction);
+            yield logToChannel(interaction, action, input);
+        }
+        else if (commandName === 'checksteam') {
+            yield (0, SearchSteam_1.execute)(interaction); // Call the execute function from SearchSteam
             yield logToChannel(interaction, action, input);
         }
         const end = performance.now();

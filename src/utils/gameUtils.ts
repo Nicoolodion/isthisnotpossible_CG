@@ -31,12 +31,25 @@ export async function loadGames(): Promise<Game[]> {
     return gamesCache as Game[];
 }
 
+
 export async function searchGames(name: string): Promise<Game[]> {
     const games = await loadGames();
     // Perform fuzzy search on the loaded games
     const fuse = new Fuse(games, {
         keys: ['name'],
         threshold: 0.2
+    });
+
+    const result = fuse.search(name);
+    return result.map(res => res.item);
+}
+
+export async function searchGamesExact(name: string): Promise<Game[]> {
+    const games = await loadGames();
+    // Perform fuzzy search on the loaded games
+    const fuse = new Fuse(games, {
+        keys: ['name'],
+        threshold: 0.05
     });
 
     const result = fuse.search(name);
