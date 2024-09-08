@@ -8,6 +8,7 @@ A Discord bot that checks on if a game can be cracked or not, including checking
 - **Add new games with reasons or submit for review**: `/new-games-add <Name of the Game> <Reason>`
 - **Review pending games**: `/review-games`
 - **Delete games**: `/delete-games <Name of the Game>`
+- **add Games by searching through steam**: `/checksteam <Steam URl or SteamID>`
 - **Included logs and easy to use**
 - **Duplicate Detection**
 - **Easy to use Permission Management**
@@ -64,6 +65,7 @@ A Discord bot that checks on if a game can be cracked or not, including checking
 - **/new-games-add <Name of the Game> <Reason>**: Adds a new game with a reason. users with `@uploader` or `@admin` roles directly add it to the list. `@team` adds it to pending.
 - **/review-games**: Lists pending games and provides options to approve or remove them. Requires `@admin` or `@uploader` role for access.
 - **/delete-games <Name of the Game>**: Deletes a game in the list. Requires `@admin` or `@uploader` role for access.
+- **/checksteam <Name of the Game>**: Either automaticly adds the top 50 Games of Steam to the pending list or adds specified games by either inputting a URl or A SteamID. Requires `@admin` or `@uploader` role for access.
 
 ## Running the Bot
 
@@ -96,7 +98,7 @@ Happy coding!
 - [x] fix "undefined" showing up when force adding new-games.add
 - [x] Make the input not visible if there is none. (embed logging)
 - [x] simplify the commands?
-- [ ] Automaticlly writes in a Request Thread or maybe even a Ticket when it detects a Gamename that can't be cracked. Mor join it with the request bot
+- [ ] Automaticlly writes in a Request Thread or maybe even a Ticket when it detects a Gamename that can't be cracked. or join it with the request bot
 - [ ] make it show the gamename in the log when removing it using game-review
 - [!] ForceAdd doesn't work using the command for uploaders and Admins (and maybe normal two?) - Removed
 - [ ] improve logs
