@@ -90,53 +90,43 @@ const gamesReviewsCommand = {
                     components: [] 
                 });
             } else if (interaction.customId === 'remove') {
-                const selectMenus = [];
-                for (let i = 0; i < pendingGames.length; i += MAX_OPTIONS_PER_MENU) {
-                    const chunk = pendingGames.slice(i, i + MAX_OPTIONS_PER_MENU);
-                    const options = chunk.map((game: any, index: number) => ({
-                        label: game.name,
-                        value: (i + index).toString() // Use the absolute index as the value
-                    }));
+                const options = pendingGames.map((game: any, index: number) => ({
+                    label: game.name,
+                    value: index.toString()
+                }));
 
-                    const selectMenu = new StringSelectMenuBuilder()
-                        .setCustomId(`remove-select-${i}`)
-                        .setPlaceholder('Select games to remove')
-                        .setMinValues(1)
-                        .setMaxValues(options.length)
-                        .addOptions(options);
+                const selectMenu = new StringSelectMenuBuilder()
+                    .setCustomId('remove-select')
+                    .setPlaceholder('Select games to remove')
+                    .setMinValues(1)
+                    .setMaxValues(options.length)
+                    .addOptions(options);
 
-                    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
-                    selectMenus.push(row);
-                }
-
-                await interaction.update({
+                const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+                await interaction.update({ 
                     embeds: [new EmbedBuilder()
                         .setColor('#0099ff')
                         .setTitle('Select Games to Remove')
                         .setDescription("Select the games to remove from the pending list:")
                         .setTimestamp()
                     ],
-                    components: selectMenus
+                    components: [row] 
                 });
             }
         } else if (interaction.isStringSelectMenu()) {
-            // Defer the interaction response to keep it alive while processing
-            await interaction.deferUpdate();
-
             const selectedIndexes = interaction.values.map((value: string) => parseInt(value));
             for (const index of selectedIndexes) {
                 const game = pendingGames[index];
                 await removePendingGameFromDatabase(game.name); // Remove selected pending games
             }
-
-            await interaction.editReply({
+            await interaction.update({ 
                 embeds: [new EmbedBuilder()
                     .setColor('#0099ff')
                     .setTitle('Update Status')
                     .setDescription("The selected games have been removed from the pending list.")
                     .setTimestamp()
                 ],
-                components: [] // Remove the components after the interaction is complete
+                components: [] 
             });
         }
     }

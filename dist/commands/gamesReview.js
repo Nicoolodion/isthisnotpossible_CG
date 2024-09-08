@@ -86,22 +86,17 @@ const gamesReviewsCommand = {
                 });
             }
             else if (interaction.customId === 'remove') {
-                const selectMenus = [];
-                for (let i = 0; i < pendingGames.length; i += MAX_OPTIONS_PER_MENU) {
-                    const chunk = pendingGames.slice(i, i + MAX_OPTIONS_PER_MENU);
-                    const options = chunk.map((game, index) => ({
-                        label: game.name,
-                        value: (i + index).toString() // Use the absolute index as the value
-                    }));
-                    const selectMenu = new discord_js_1.StringSelectMenuBuilder()
-                        .setCustomId(`remove-select-${i}`)
-                        .setPlaceholder('Select games to remove')
-                        .setMinValues(1)
-                        .setMaxValues(options.length)
-                        .addOptions(options);
-                    const row = new discord_js_1.ActionRowBuilder().addComponents(selectMenu);
-                    selectMenus.push(row);
-                }
+                const options = pendingGames.map((game, index) => ({
+                    label: game.name,
+                    value: index.toString()
+                }));
+                const selectMenu = new discord_js_1.StringSelectMenuBuilder()
+                    .setCustomId('remove-select')
+                    .setPlaceholder('Select games to remove')
+                    .setMinValues(1)
+                    .setMaxValues(options.length)
+                    .addOptions(options);
+                const row = new discord_js_1.ActionRowBuilder().addComponents(selectMenu);
                 yield interaction.update({
                     embeds: [new discord_js_1.EmbedBuilder()
                             .setColor('#0099ff')
@@ -109,26 +104,24 @@ const gamesReviewsCommand = {
                             .setDescription("Select the games to remove from the pending list:")
                             .setTimestamp()
                     ],
-                    components: selectMenus
+                    components: [row]
                 });
             }
         }
         else if (interaction.isStringSelectMenu()) {
-            // Defer the interaction response to keep it alive while processing
-            yield interaction.deferUpdate();
             const selectedIndexes = interaction.values.map((value) => parseInt(value));
             for (const index of selectedIndexes) {
                 const game = pendingGames[index];
                 yield (0, fileUtils_1.removePendingGameFromDatabase)(game.name); // Remove selected pending games
             }
-            yield interaction.editReply({
+            yield interaction.update({
                 embeds: [new discord_js_1.EmbedBuilder()
                         .setColor('#0099ff')
                         .setTitle('Update Status')
                         .setDescription("The selected games have been removed from the pending list.")
                         .setTimestamp()
                 ],
-                components: [] // Remove the components after the interaction is complete
+                components: []
             });
         }
     })

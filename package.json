@@ -20,7 +20,6 @@
     "flexsearch": "^0.7.43",
     "fuse.js": "^7.0.0",
     "node-fetch": "^2.7.0",
-    "puppeteer": "^23.3.0",
     "sqlite3": "^5.1.7",
     "tough-cookie": "^4.1.4",
     "winston": "^3.14.2"
