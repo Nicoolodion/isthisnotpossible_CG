@@ -48,6 +48,9 @@ const permissions_1 = require("../utils/permissions");
 (0, dotenv_1.config)();
 // Keywords to search for on the Steam page
 const keywords = ['Denuvo', 'Activision Account', 'Warframe Account', 'background use required', 'EA online activation'];
+// Multiplayer-related and exception keywords
+const multiplayerKeywords = ['Multiplayer-only', 'Online-only', 'Requires constant internet connection'];
+const gameExceptions = ['Fortnite', 'Apex Legends', 'Hogwarts Legacy']; // Add any special case games here
 // Function to check the Steam page
 function checkSteamPage(url) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -63,6 +66,17 @@ function checkSteamPage(url) {
             const gameName = $('#appHubAppName').text().trim();
             const drmNotice = $('.DRM_notice').text();
             const pageContent = drmNotice.toLowerCase();
+            // Handle known exceptions
+            if (gameExceptions.includes(gameName)) {
+                return { gameName, isClean: false, reason: 'Known exception: ' + gameName };
+            }
+            // Handle multiplayer/online-only games
+            for (const multiplayerKeyword of multiplayerKeywords) {
+                if (pageContent.includes(multiplayerKeyword.toLowerCase())) {
+                    return { gameName, isClean: false, reason: 'Multiplayer/Online-only' };
+                }
+            }
+            // Handle regular DRM checks
             for (const keyword of keywords) {
                 if (pageContent.includes(keyword.toLowerCase())) {
                     return { gameName, isClean: false, reason: keyword };
@@ -79,6 +93,21 @@ function checkSteamPage(url) {
 // Helper function to construct a Steam URL from an App ID
 function buildSteamUrl(appId) {
     return `https://store.steampowered.com/app/${appId}`;
+}
+// Function to refresh game statuses in the database
+function refreshPendingGameStatuses() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const pendingGames = yield (0, fileUtils_1.fetchAllPendingGames)();
+        for (const pendingGame of pendingGames) {
+            const url = buildSteamUrl(pendingGame.id);
+            const { isClean, reason, gameName } = yield checkSteamPage(url);
+            if (gameName && gameName !== 'Error Fetching game') {
+                if (pendingGame.cracked !== isClean) {
+                    yield (0, fileUtils_1.approvePendingGame)(gameName); // Update status
+                }
+            }
+        }
+    });
 }
 // Function to get top games from Steam
 function getTopSteamGames() {
@@ -146,9 +175,9 @@ function execute(interaction) {
                 if (existingGames.length === 0) {
                     const embed = new discord_js_1.EmbedBuilder()
                         .setColor(isClean ? '#00FF00' : '#FF0000')
-                        .setTitle(isClean ? 'Game is Crackable' : 'Game Contains DRM')
+                        .setTitle(isClean ? 'Game is Crackable ✅' : 'Game Contains DRM 🚫')
                         .setDescription(`Checked URL: ${url}`)
-                        .addFields({ name: 'Game Name', value: gameName || 'Unknown' }, { name: 'Result', value: isClean ? 'This game does not contain known DRM protections and might be crackable.' : 'This game contains DRM (e.g., Denuvo) and is not crackable.' }, { name: 'Reason', value: reason || 'Unknown' })
+                        .addFields({ name: 'Game Name', value: gameName || 'Unknown' }, { name: 'Result', value: isClean ? 'This game does not contain known DRM protections and might be crackable.' : 'This game contains DRM (e.g., Denuvo) or is multiplayer/online-only and is not crackable.' }, { name: 'Reason', value: reason || 'Unknown' })
                         .setTimestamp();
                     yield interaction.followUp({ embeds: [embed], ephemeral: true });
                     try {
@@ -182,6 +211,8 @@ function execute(interaction) {
             if (topGameLinks.length > 0) {
                 const games = topGameLinks.map(url => checkSteamPage(url));
                 const results = yield Promise.all(games);
+                let processedCount = 0;
+                const totalGames = results.length;
                 for (const { isClean, reason, gameName } of results) {
                     if (gameName) {
                         const existingGames = yield (0, gameUtils_1.searchGamesExact)(gameName);
@@ -194,21 +225,23 @@ function execute(interaction) {
                             }
                         }
                     }
+                    processedCount++;
+                    if (processedCount % 10 === 0) {
+                        // Send progress update every 10 games
+                        const progressEmbed = new discord_js_1.EmbedBuilder()
+                            .setColor('#0099ff')
+                            .setDescription(`Processed ${processedCount}/${totalGames} games...`);
+                        if (!interaction.deferred) {
+                            yield interaction.deferReply({ ephemeral: true });
+                        }
+                        interaction.editReply({ embeds: [progressEmbed] });
+                    }
                 }
-                const embed = new discord_js_1.EmbedBuilder()
+                const finalEmbed = new discord_js_1.EmbedBuilder()
                     .setColor('#00FF00')
-                    .setTitle('Top Games Processed')
-                    .setDescription('The top games have been checked and added to the pending games list if applicable.')
+                    .setDescription(`Finished processing ${totalGames} games.`)
                     .setTimestamp();
-                yield interaction.followUp({ embeds: [embed], ephemeral: true });
-            }
-            else {
-                const embed = new discord_js_1.EmbedBuilder()
-                    .setColor('#FF0000')
-                    .setTitle('Error')
-                    .setDescription('Failed to fetch the top games from Steam.')
-                    .setTimestamp();
-                yield interaction.followUp({ embeds: [embed], ephemeral: true });
+                yield interaction.editReply({ embeds: [finalEmbed] });
             }
         }
     });

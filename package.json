@@ -22,13 +22,13 @@
     "node-fetch": "^2.7.0",
     "sqlite3": "^5.1.7",
     "tough-cookie": "^4.1.4",
-    "winston": "^3.14.2"
+    "winston": "^3.14.2",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/got": "^9.6.12",
     "@types/jsdom": "^21.1.7",
     "@types/node-fetch": "^2.6.11",
-    "@types/tough-cookie": "^4.0.5",
-    "dotenv": "^16.4.5"
+    "@types/tough-cookie": "^4.0.5"
   }
 }

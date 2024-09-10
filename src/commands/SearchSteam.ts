@@ -4,20 +4,23 @@ import axios from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import * as cheerio from 'cheerio';
-import { addPendingGameToDatabase } from '../utils/fileUtils';
+import { addPendingGameToDatabase, fetchAllPendingGames, approvePendingGame } from '../utils/fileUtils';
 import { searchGamesExact } from '../utils/gameUtils';
 import { checkPermissions } from '../utils/permissions';
 
 config();
 
 // Keywords to search for on the Steam page
-const keywords = ['Denuvo', 'Activision Account', 'Warframe Account', 'background use required', 'EA online activation' ];
+const keywords = ['Denuvo', 'Activision Account', 'Warframe Account', 'background use required', 'EA online activation'];
+
+// Multiplayer-related and exception keywords
+const multiplayerKeywords = ['Multiplayer-only', 'Online-only', 'Requires constant internet connection'];
+const gameExceptions = ['Fortnite', 'Apex Legends', 'Hogwarts Legacy']; // Add any special case games here
 
 // Function to check the Steam page
 async function checkSteamPage(url: string): Promise<{ isClean: boolean; reason: string | null; gameName: string }> {
 
     try {
-
         const cookieJar = new CookieJar();
         const client = wrapper(axios.create({ jar: cookieJar }));
         const response = await client.get(url, {
@@ -31,6 +34,19 @@ async function checkSteamPage(url: string): Promise<{ isClean: boolean; reason: 
         const drmNotice = $('.DRM_notice').text();
         const pageContent = drmNotice.toLowerCase();
 
+        // Handle known exceptions
+        if (gameExceptions.includes(gameName)) {
+            return { gameName, isClean: false, reason: 'Known exception: ' + gameName };
+        }
+
+        // Handle multiplayer/online-only games
+        for (const multiplayerKeyword of multiplayerKeywords) {
+            if (pageContent.includes(multiplayerKeyword.toLowerCase())) {
+                return { gameName, isClean: false, reason: 'Multiplayer/Online-only' };
+            }
+        }
+
+        // Handle regular DRM checks
         for (const keyword of keywords) {
             if (pageContent.includes(keyword.toLowerCase())) {
                 return { gameName, isClean: false, reason: keyword };
@@ -47,6 +63,22 @@ async function checkSteamPage(url: string): Promise<{ isClean: boolean; reason: 
 // Helper function to construct a Steam URL from an App ID
 function buildSteamUrl(appId: string): string {
     return `https://store.steampowered.com/app/${appId}`;
+}
+
+// Function to refresh game statuses in the database
+async function refreshPendingGameStatuses() {
+    const pendingGames = await fetchAllPendingGames();
+
+    for (const pendingGame of pendingGames) {
+        const url = buildSteamUrl(pendingGame.id);
+        const { isClean, reason, gameName } = await checkSteamPage(url);
+
+        if (gameName && gameName !== 'Error Fetching game') {
+            if (pendingGame.cracked !== isClean) {
+                await approvePendingGame(gameName); // Update status
+            }
+        }
+    }
 }
 
 // Function to get top games from Steam
@@ -123,11 +155,11 @@ export async function execute(interaction: CommandInteraction) {
             if (existingGames.length === 0) {
                 const embed = new EmbedBuilder()
                     .setColor(isClean ? '#00FF00' : '#FF0000')
-                    .setTitle(isClean ? 'Game is Crackable' : 'Game Contains DRM')
+                    .setTitle(isClean ? 'Game is Crackable ✅' : 'Game Contains DRM 🚫')
                     .setDescription(`Checked URL: ${url}`)
                     .addFields(
                         { name: 'Game Name', value: gameName || 'Unknown' },
-                        { name: 'Result', value: isClean ? 'This game does not contain known DRM protections and might be crackable.' : 'This game contains DRM (e.g., Denuvo) and is not crackable.' },
+                        { name: 'Result', value: isClean ? 'This game does not contain known DRM protections and might be crackable.' : 'This game contains DRM (e.g., Denuvo) or is multiplayer/online-only and is not crackable.' },
                         { name: 'Reason', value: reason || 'Unknown' }
                     )
                     .setTimestamp();
@@ -165,6 +197,9 @@ export async function execute(interaction: CommandInteraction) {
             const games = topGameLinks.map(url => checkSteamPage(url));
             const results = await Promise.all(games);
 
+            let processedCount = 0;
+            const totalGames = results.length;
+
             for (const { isClean, reason, gameName } of results) {
                 if (gameName) {
                     const existingGames = await searchGamesExact(gameName);
@@ -177,23 +212,27 @@ export async function execute(interaction: CommandInteraction) {
                         }
                     }
                 }
+
+                processedCount++;
+                if (processedCount % 10 === 0) {
+                    // Send progress update every 10 games
+                    const progressEmbed = new EmbedBuilder()
+                        .setColor('#0099ff')
+                        .setDescription(`Processed ${processedCount}/${totalGames} games...`);
+                    if (!interaction.deferred) {
+                        await interaction.deferReply({ ephemeral: true });
+                    }
+
+                    interaction.editReply({ embeds: [progressEmbed] });
+                }
             }
 
-            const embed = new EmbedBuilder()
+            const finalEmbed = new EmbedBuilder()
                 .setColor('#00FF00')
-                .setTitle('Top Games Processed')
-                .setDescription('The top games have been checked and added to the pending games list if applicable.')
+                .setDescription(`Finished processing ${totalGames} games.`)
                 .setTimestamp();
 
-            await interaction.followUp({ embeds: [embed], ephemeral: true });
-        } else {
-            const embed = new EmbedBuilder()
-                .setColor('#FF0000')
-                .setTitle('Error')
-                .setDescription('Failed to fetch the top games from Steam.')
-                .setTimestamp();
-
-            await interaction.followUp({ embeds: [embed], ephemeral: true });
+            await interaction.editReply({ embeds: [finalEmbed]});
         }
     }
 }

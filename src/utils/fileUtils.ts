@@ -118,6 +118,7 @@ export function addPendingGameToDatabase(name: string, cracked: boolean, reason:
     });
 }
 
+
 // Remove a game from the 'pending_games' table
 export function removePendingGameFromDatabase(name: string): Promise<void> {
     return new Promise((resolve, reject) => {
