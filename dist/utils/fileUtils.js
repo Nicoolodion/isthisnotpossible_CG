@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchPendingGameByName = exports.approvePendingGame = exports.removePendingGameFromDatabase = exports.addPendingGameToDatabase = exports.fetchAllPendingGames = exports.removeGameFromDatabase = exports.addGameToDatabase = exports.fetchAllGames = void 0;
+exports.fetchPendingGameByName = exports.approvePendingGame = exports.removePendingGameFromDatabase = exports.addPendingGameToDatabase = exports.fetchAllPendingGames = exports.removeGameFromDatabase = exports.addGameToDatabase = exports.fetchAllGames = exports.setThreadInfo = exports.fetchThreadInfo = void 0;
 const sqlite3_1 = __importDefault(require("sqlite3"));
 const path_1 = __importDefault(require("path"));
 // Open the SQLite database connection
@@ -47,10 +47,54 @@ db.serialize(() => {
             reason TEXT
         )
     `);
+    db.run(`
+        CREATE TABLE IF NOT EXISTS thread_info (
+            thread_id TEXT PRIMARY KEY,
+            message_id TEXT
+        )
+    `);
     // Create indexes to improve query performance
     db.run('CREATE INDEX IF NOT EXISTS idx_games_name ON games(name);');
     db.run('CREATE INDEX IF NOT EXISTS idx_pending_games_name ON pending_games(name);');
 });
+// Fetch the thread_id and message_id from the 'thread_info' table
+function fetchThreadInfo() {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT * FROM thread_info', (err, row) => {
+            if (err) {
+                console.error('Error fetching thread info:', err);
+                reject(err);
+            }
+            else {
+                resolve(row ? { thread_id: row.thread_id, message_id: row.message_id } : null);
+            }
+        });
+    });
+}
+exports.fetchThreadInfo = fetchThreadInfo;
+// Overwrite the thread_id and message_id in the 'thread_info' table
+function setThreadInfo(thread_id, message_id) {
+    return new Promise((resolve, reject) => {
+        db.run('DELETE FROM thread_info;', (err1) => {
+            if (err1) {
+                console.error('Error deleting thread info:', err1);
+                reject(err1);
+            }
+            else {
+                db.run('INSERT INTO thread_info (thread_id, message_id) VALUES (?, ?)', [thread_id, message_id], (err2) => {
+                    if (err2) {
+                        console.error('Error setting thread info:', err2);
+                        reject(err2);
+                    }
+                    else {
+                        resolve();
+                    }
+                });
+            }
+        });
+    });
+}
+exports.setThreadInfo = setThreadInfo;
 // Fetch all games from the 'games' table
 function fetchAllGames() {
     return new Promise((resolve, reject) => {

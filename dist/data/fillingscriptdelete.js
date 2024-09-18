@@ -17,7 +17,7 @@ async function deleteFillingEntries() {
     db.serialize(() => {
         db.run('BEGIN TRANSACTION;');
 
-        db.run(`DELETE FROM games WHERE name LIKE 'Filling_%';`, (err) => {
+        db.run(`DELETE FROM pending_games WHERE name LIKE 'Filling_%';`, (err) => {
             if (err) {
                 console.error('Error deleting filling entries:', err);
             } else {

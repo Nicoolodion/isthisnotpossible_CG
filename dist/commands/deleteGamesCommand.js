@@ -12,6 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
 const gameUtils_1 = require("../utils/gameUtils");
+const gameInfoManager_1 = require("../utils/gameInfoManager");
+const index_1 = require("../index");
 const deleteGamesCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b, _c, _d;
@@ -111,6 +113,7 @@ const deleteGamesCommand = {
                     embeds: [new discord_js_1.EmbedBuilder().setColor('#00ff00').setDescription("The selected games have been deleted from the main list.")],
                     components: [],
                 });
+                yield (0, gameInfoManager_1.createThread)(index_1.client);
             }
         }
         else if (interaction.isStringSelectMenu()) {

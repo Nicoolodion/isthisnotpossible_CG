@@ -1,6 +1,9 @@
-import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, EmbedBuilder, Client } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { searchGames, removeGame } from '../utils/gameUtils';
+import { createThread } from '../utils/gameInfoManager';
+import { client } from '../index';
+
 
 const deleteGamesCommand = {
     execute: async (interaction: CommandInteraction) => {
@@ -116,6 +119,7 @@ const deleteGamesCommand = {
                     embeds: [new EmbedBuilder().setColor('#00ff00').setDescription("The selected games have been deleted from the main list.")],
                     components: [],
                 });
+                await createThread(client);
             }
         } else if (interaction.isStringSelectMenu()) {
             const selectedGames = interaction.values;

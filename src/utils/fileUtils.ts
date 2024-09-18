@@ -1,6 +1,11 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
 
+interface ThreadInfoRow {
+    thread_id: string;
+    message_id: string;
+  }
+
 // Open the SQLite database connection
 const dbPath = path.resolve(__dirname, '../../dist/data/games.db');
 const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
@@ -34,11 +39,52 @@ db.serialize(() => {
             reason TEXT
         )
     `);
+    db.run(`
+        CREATE TABLE IF NOT EXISTS thread_info (
+            thread_id TEXT PRIMARY KEY,
+            message_id TEXT
+        )
+    `);
 
     // Create indexes to improve query performance
     db.run('CREATE INDEX IF NOT EXISTS idx_games_name ON games(name);');
     db.run('CREATE INDEX IF NOT EXISTS idx_pending_games_name ON pending_games(name);');
 });
+
+// Fetch the thread_id and message_id from the 'thread_info' table
+export function fetchThreadInfo(): Promise<{ thread_id: string, message_id: string } | null> {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT * FROM thread_info', (err, row) => {
+            if (err) {
+                console.error('Error fetching thread info:', err);
+                reject(err);
+            } else {
+                resolve(row ? { thread_id: (row as ThreadInfoRow).thread_id, message_id: (row as ThreadInfoRow).message_id } : null);
+            }
+        });
+    });
+}
+
+// Overwrite the thread_id and message_id in the 'thread_info' table
+export function setThreadInfo(thread_id: string, message_id: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+        db.run('DELETE FROM thread_info;', (err1) => {
+            if (err1) {
+                console.error('Error deleting thread info:', err1);
+                reject(err1);
+            } else {
+                db.run('INSERT INTO thread_info (thread_id, message_id) VALUES (?, ?)', [thread_id, message_id], (err2) => {
+                    if (err2) {
+                        console.error('Error setting thread info:', err2);
+                        reject(err2);
+                    } else {
+                        resolve();
+                    }
+                });
+            }
+        });
+    });
+}
 
 // Fetch all games from the 'games' table
 export function fetchAllGames(): Promise<any[]> {

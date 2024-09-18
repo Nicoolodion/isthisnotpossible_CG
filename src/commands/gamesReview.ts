@@ -33,6 +33,7 @@ const gamesReviewsCommand = {
         }
 
         // Split the game list into multiple embeds
+        const MAX_DESCRIPTION_LENGTH = 4096; // Discord limit for description length
         const embeds = [];
         let currentDescription = '';
 

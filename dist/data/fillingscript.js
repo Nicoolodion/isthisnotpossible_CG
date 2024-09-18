@@ -26,7 +26,7 @@ async function populateDatabase() {
     // Use a transaction to batch inserts for better performance
     db.serialize(() => {
         db.run('BEGIN TRANSACTION;');
-        const stmt = db.prepare('INSERT INTO games (name, cracked, reason) VALUES (?, ?, ?)');
+        const stmt = db.prepare('INSERT INTO pending_games (name, cracked, reason) VALUES (?, ?, ?)');
 
         for (let i = 1; i <= 50000; i++) {
             const name = `Filling_${i}`;
