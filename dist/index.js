@@ -19,14 +19,17 @@ const newGamesAdd_1 = __importDefault(require("./commands/newGamesAdd"));
 const gamesReview_1 = __importDefault(require("./commands/gamesReview"));
 const deleteGamesCommand_1 = __importDefault(require("./commands/deleteGamesCommand"));
 const gameInfoManager_1 = require("./utils/gameInfoManager");
-const fileUtils_1 = require("./utils/fileUtils");
 (0, dotenv_1.config)();
 const client = new discord_js_1.Client({
     intents: [
         discord_js_1.GatewayIntentBits.Guilds,
         discord_js_1.GatewayIntentBits.GuildMessages,
         discord_js_1.GatewayIntentBits.MessageContent
-    ]
+    ],
+    makeCache: discord_js_1.Options.cacheWithLimits({
+        MessageManager: 100, // Cache up to 100 messages per channel
+        UserManager: 70, // Cache up to 50 users
+    }),
 });
 exports.client = client;
 // TODO: Maybe delete this and other variable call
@@ -79,7 +82,10 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         console.error(error);
     }
+    const start = performance.now();
     yield (0, gameInfoManager_1.createThread)(client);
+    const end = performance.now();
+    console.log(`createThread: Responded to interaction in ${end - start}ms`);
 }));
 client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
@@ -93,25 +99,22 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             : `\`/${commandName}\``;
         const input = options.get('name') ? `${(_a = options.get('name')) === null || _a === void 0 ? void 0 : _a.value}` : undefined;
         const reason = options.get('reason') ? `${(_b = options.get('reason')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
-        const channelId = process.env.channel_id;
-        let channel;
-        if (channelId) {
-            channel = client.channels.cache.get(channelId);
-        }
         if (commandName === 'new-games-add') {
             yield newGamesAdd_1.default.execute(interaction);
-            (0, fileUtils_1.sortGamesByName)();
+            //sortGamesByName();
             yield (0, gameInfoManager_1.createThread)(client);
         }
         else if (commandName === 'review-games') {
             yield gamesReview_1.default.execute(interaction);
-            (0, fileUtils_1.sortGamesByName)();
+            //sortGamesByName();
             yield (0, gameInfoManager_1.createThread)(client);
         }
         else if (commandName === 'delete-games') {
             yield deleteGamesCommand_1.default.execute(interaction);
             yield (0, gameInfoManager_1.createThread)(client);
         }
+        const end = performance.now();
+        console.log(`Command: Responded to interaction in ${end - start}ms`);
     }
     else if (interaction.isButton() || interaction.isSelectMenu()) {
         const { customId, user } = interaction;

@@ -8,7 +8,7 @@ import { client } from '../index';
 const deleteGamesCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
-        const { adminUserId } = require('../data/permissions.json');
+        const { admins: [adminUserId] } = require('../data/permissions.json');
         const overrides = require('../data/permissions.json').overrides['delete-games'];
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;

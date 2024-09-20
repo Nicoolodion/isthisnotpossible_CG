@@ -27,6 +27,8 @@ db.serialize(() => {
     // Use WAL mode for better performance in write-heavy workloads
     db.run('PRAGMA journal_mode = WAL;');
     db.run('PRAGMA cache_size = 10000;');
+    db.run('PRAGMA wal_autocheckpoint = 1000;');
+
     // Create tables with indexes
     db.run(`
         CREATE TABLE IF NOT EXISTS games (
@@ -67,8 +69,8 @@ export function sortGamesByName(): Promise<void> {
             } else {
                 // Optionally, if you need to perform any additional operations with the sorted rows
                 // you could process `rows` here before resolving.
-                console.log('Games sorted alphabetically:');
-                console.table(rows);
+                //console.log('Games sorted alphabetically:');
+                //console.table(rows);
 
                 // As the sorting itself doesn't modify the database, there's no need to re-save anything.
                 // We just need to retrieve and use the sorted data.
@@ -130,35 +132,78 @@ export function fetchAllGames(): Promise<any[]> {
     });
 }
 
+// Create a queue for adding games to the database to reduce the risk of conflicts
+const addGameQueue: Array<{ name: string; cracked: boolean; reason: string | null }> = [];
+let isAddingGame = false;
+
 // Add a game to the 'games' table
 export function addGameToDatabase(name: string, cracked: boolean, reason: string | null): Promise<void> {
     return new Promise((resolve, reject) => {
-        db.run(
-            `INSERT INTO games (name, cracked, reason) VALUES (?, ?, ?)`,
-            [name, cracked, reason],
-            (err) => {
-                if (err) {
-                    console.error('Error adding game to database:', err);
-                    reject(err);
-                } else {
-                    resolve();
-                }
+        addGameQueue.push({ name, cracked, reason });
+
+        // If no one is currently adding a game, start adding the game now
+        if (!isAddingGame) {
+            isAddingGame = true;
+            processAddGameQueue();
+        }
+
+        function processAddGameQueue(): void {
+            const nextGame = addGameQueue.shift();
+            if (!nextGame) {
+                isAddingGame = false;
+                return;
             }
-        );
+
+            db.run(
+                `INSERT INTO games (name, cracked, reason) VALUES (?, ?, ?)`,
+                [nextGame.name, nextGame.cracked, nextGame.reason],
+                (err) => {
+                    if (err) {
+                        console.error('Error adding game to database:', err);
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                    processAddGameQueue();
+                }
+            );
+        }
     });
 }
+
+// Create a queue for removing games from the database to reduce the risk of conflicts
+const removeGameQueue: Array<string> = [];
+let isRemovingGame = false;
 
 // Remove a game from the 'games' table
 export function removeGameFromDatabase(name: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        db.run(`DELETE FROM games WHERE name = ?`, [name], (err) => {
-            if (err) {
-                console.error('Error removing game from database:', err);
-                reject(err);
-            } else {
-                resolve();
+        //TODO: Make sure this queue works
+        removeGameQueue.push(name);
+
+        // If no one is currently removing a game, start removing the game now
+        if (!isRemovingGame) {
+            isRemovingGame = true;
+            processRemoveGameQueue();
+        }
+
+        function processRemoveGameQueue(): void {
+            const nextGame = removeGameQueue.shift();
+            if (!nextGame) {
+                isRemovingGame = false;
+                return;
             }
-        });
+
+            db.run(`DELETE FROM games WHERE name = ?`, [nextGame], (err) => {
+                if (err) {
+                    console.error('Error removing game from database:', err);
+                    reject(err);
+                } else {
+                    resolve();
+                }
+                processRemoveGameQueue();
+            });
+        }
     });
 }
 
@@ -223,6 +268,8 @@ export function approvePendingGame(name: string): Promise<void> {
 
             // Commit transaction
             await db.run('COMMIT');
+
+
             resolve();
         } catch (err) {
             console.error('Error approving pending game:', err);
@@ -250,5 +297,7 @@ export function fetchPendingGameByName(name: string): Promise<any> {
         });
     });
 }
+
+
 
 export default db;

@@ -13,17 +13,19 @@ const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
 const gameUtils_1 = require("../utils/gameUtils");
+const fileUtils_1 = require("../utils/fileUtils");
 (0, dotenv_1.config)();
 const newGamesAddCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         const userRoles = (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.roles;
-        const { adminUserId } = require('../data/permissions.json');
+        const { admins: [adminUserId] } = require('../data/permissions.json');
         const overrides = require('../data/permissions.json').overrides['new-games-add'];
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;
+        console.log(adminUserId);
         const hasTeamRole = (0, permissions_1.checkPermissions)(userRoles, (_b = process.env.team) !== null && _b !== void 0 ? _b : '');
-        const hasUploaderOrAdminRole = (0, permissions_1.checkPermissions)(userRoles, (_c = process.env.admin) !== null && _c !== void 0 ? _c : '') || (0, permissions_1.checkPermissions)(userRoles, (_d = process.env.uploader) !== null && _d !== void 0 ? _d : '') || allowedUserIds.includes(interaction.user.id);
+        const hasUploaderOrAdminRole = (0, permissions_1.checkPermissions)(userRoles, (_c = process.env.admin) !== null && _c !== void 0 ? _c : '') || (0, permissions_1.checkPermissions)(userRoles, (_d = process.env.uploader) !== null && _d !== void 0 ? _d : '') || allowedUserIds.includes(interaction.user.id) || interaction.user.id === adminUserId;
         if (disabledUserIds.includes(interaction.user.id) || (!hasTeamRole && !hasUploaderOrAdminRole && interaction.user.id !== adminUserId)) {
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
@@ -33,6 +35,22 @@ const newGamesAddCommand = {
         }
         const gameName = (_e = interaction.options.get('name')) === null || _e === void 0 ? void 0 : _e.value;
         const reason = (_f = interaction.options.get('reason')) === null || _f === void 0 ? void 0 : _f.value;
+        if (gameName.length >= 100) {
+            console.log("I was triggered, daddy!");
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription('The Name is too long. Please find a shorter Version :)');
+            yield interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+        }
+        if (reason && reason.length >= 100) {
+            console.log("I was triggered, daddy!");
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription('The Reason is too long. Please find a shorter Version :)');
+            yield interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+        }
         let targetFile, alreadyOnListMessage, addedMessage;
         if (hasTeamRole && !hasUploaderOrAdminRole) {
             targetFile = 'pending-games.json';
@@ -45,7 +63,9 @@ const newGamesAddCommand = {
             addedMessage = `The game \`${gameName}\` has been sorted and added to the list.`;
         }
         const gamesList = yield (0, gameUtils_1.loadGames)();
-        const isGameOnList = gamesList.some((game) => game.name.toLowerCase() === gameName.toLowerCase());
+        const pendingGamesList = yield (0, fileUtils_1.fetchAllPendingGames)();
+        const isGameOnList = gamesList.some((game) => game.name.toLowerCase() === gameName.toLowerCase()) ||
+            pendingGamesList.some((game) => game.name.toLowerCase() === gameName.toLowerCase());
         if (isGameOnList) {
             //const overrideButton = new ButtonBuilder()
             //    .setCustomId(`override-add-${hasTeamRole && !hasUploaderOrAdminRole ? 'pending' : ''}`)
@@ -53,7 +73,7 @@ const newGamesAddCommand = {
             //    .setStyle(ButtonStyle.Success);
             //const row = new ActionRowBuilder<ButtonBuilder>()
             //    .addComponents(overrideButton);
-            //TODO: Make thid look better
+            //TODO: Make this look better
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);

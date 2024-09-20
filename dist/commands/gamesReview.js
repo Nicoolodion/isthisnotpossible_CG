@@ -23,7 +23,7 @@ const gamesReviewsCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
         var _a, _b, _c;
         const userRoles = (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.roles;
-        const { adminUserId } = require('../data/permissions.json');
+        const { admins: [adminUserId] } = require('../data/permissions.json');
         const overrides = require('../data/permissions.json').overrides['review-games'];
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;

@@ -1,7 +1,8 @@
 import { config } from 'dotenv';
-import { CommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { CommandInteraction, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { loadGames, addGame, addPendingGame } from '../utils/gameUtils';
+import { fetchAllPendingGames } from '../utils/fileUtils';
 
 
 config();
@@ -9,13 +10,14 @@ config();
 const newGamesAddCommand = {
     execute: async (interaction: CommandInteraction) => {
         const userRoles = interaction.member?.roles as any;
-        const { adminUserId } = require('../data/permissions.json');
+        const { admins: [adminUserId] } = require('../data/permissions.json');
         const overrides = require('../data/permissions.json').overrides['new-games-add'];
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;
 
+
         const hasTeamRole = checkPermissions(userRoles, process.env.team ?? '');
-        const hasUploaderOrAdminRole = checkPermissions(userRoles, process.env.admin ?? '') || checkPermissions(userRoles, process.env.uploader ?? '') || allowedUserIds.includes(interaction.user.id);
+        const hasUploaderOrAdminRole = checkPermissions(userRoles, process.env.admin ?? '') || checkPermissions(userRoles, process.env.uploader ?? '') || allowedUserIds.includes(interaction.user.id) || interaction.user.id === adminUserId;
 
         if (disabledUserIds.includes(interaction.user.id) || (!hasTeamRole && !hasUploaderOrAdminRole && interaction.user.id !== adminUserId)) {
             const embed = new EmbedBuilder()
@@ -27,6 +29,21 @@ const newGamesAddCommand = {
 
         const gameName = interaction.options.get('name')?.value as string;
         const reason = interaction.options.get('reason')?.value as string | null;
+        
+        if (gameName.length >= 100) {
+            const embed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription('The Name is too long. Please find a shorter Version :)');
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+        }
+        if (reason && reason.length >= 100) {
+            const embed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription('The Reason is too long. Please find a shorter Version :)');
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+        }
 
         let targetFile, alreadyOnListMessage, addedMessage;
         if (hasTeamRole && !hasUploaderOrAdminRole) {
@@ -40,7 +57,9 @@ const newGamesAddCommand = {
         }
 
         const gamesList = await loadGames();
-        const isGameOnList = gamesList.some((game: any) => game.name.toLowerCase() === gameName.toLowerCase());
+        const pendingGamesList = await fetchAllPendingGames();
+        const isGameOnList = gamesList.some((game: any) => game.name.toLowerCase() === gameName.toLowerCase()) ||
+            pendingGamesList.some((game: any) => game.name.toLowerCase() === gameName.toLowerCase());
 
         if (isGameOnList) {
             //const overrideButton = new ButtonBuilder()
@@ -51,7 +70,7 @@ const newGamesAddCommand = {
             //const row = new ActionRowBuilder<ButtonBuilder>()
             //    .addComponents(overrideButton);
 
-            //TODO: Make thid look better
+            //TODO: Make this look better
             const embed = new EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);
@@ -66,7 +85,6 @@ const newGamesAddCommand = {
                 cracked: false,
                 reason: reason
             };
-
             if (hasTeamRole && !hasUploaderOrAdminRole) {
                 await addPendingGame(newGame);
             } else {

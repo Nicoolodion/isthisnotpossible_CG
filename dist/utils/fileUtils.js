@@ -47,6 +47,7 @@ db.serialize(() => {
     // Use WAL mode for better performance in write-heavy workloads
     db.run('PRAGMA journal_mode = WAL;');
     db.run('PRAGMA cache_size = 10000;');
+    db.run('PRAGMA wal_autocheckpoint = 1000;');
     // Create tables with indexes
     db.run(`
         CREATE TABLE IF NOT EXISTS games (
@@ -85,8 +86,8 @@ function sortGamesByName() {
             else {
                 // Optionally, if you need to perform any additional operations with the sorted rows
                 // you could process `rows` here before resolving.
-                console.log('Games sorted alphabetically:');
-                console.table(rows);
+                //console.log('Games sorted alphabetically:');
+                //console.table(rows);
                 // As the sorting itself doesn't modify the database, there's no need to re-save anything.
                 // We just need to retrieve and use the sorted data.
                 resolve();
@@ -144,32 +145,67 @@ function fetchAllGames() {
         });
     });
 }
+// Create a queue for adding games to the database to reduce the risk of conflicts
+const addGameQueue = [];
+let isAddingGame = false;
 // Add a game to the 'games' table
 function addGameToDatabase(name, cracked, reason) {
     return new Promise((resolve, reject) => {
-        db.run(`INSERT INTO games (name, cracked, reason) VALUES (?, ?, ?)`, [name, cracked, reason], (err) => {
-            if (err) {
-                console.error('Error adding game to database:', err);
-                reject(err);
+        addGameQueue.push({ name, cracked, reason });
+        // If no one is currently adding a game, start adding the game now
+        if (!isAddingGame) {
+            isAddingGame = true;
+            processAddGameQueue();
+        }
+        function processAddGameQueue() {
+            const nextGame = addGameQueue.shift();
+            if (!nextGame) {
+                isAddingGame = false;
+                return;
             }
-            else {
-                resolve();
-            }
-        });
+            db.run(`INSERT INTO games (name, cracked, reason) VALUES (?, ?, ?)`, [nextGame.name, nextGame.cracked, nextGame.reason], (err) => {
+                if (err) {
+                    console.error('Error adding game to database:', err);
+                    reject(err);
+                }
+                else {
+                    resolve();
+                }
+                processAddGameQueue();
+            });
+        }
     });
 }
+// Create a queue for removing games from the database to reduce the risk of conflicts
+const removeGameQueue = [];
+let isRemovingGame = false;
 // Remove a game from the 'games' table
 function removeGameFromDatabase(name) {
     return new Promise((resolve, reject) => {
-        db.run(`DELETE FROM games WHERE name = ?`, [name], (err) => {
-            if (err) {
-                console.error('Error removing game from database:', err);
-                reject(err);
+        //TODO: Make sure this queue works
+        removeGameQueue.push(name);
+        // If no one is currently removing a game, start removing the game now
+        if (!isRemovingGame) {
+            isRemovingGame = true;
+            processRemoveGameQueue();
+        }
+        function processRemoveGameQueue() {
+            const nextGame = removeGameQueue.shift();
+            if (!nextGame) {
+                isRemovingGame = false;
+                return;
             }
-            else {
-                resolve();
-            }
-        });
+            db.run(`DELETE FROM games WHERE name = ?`, [nextGame], (err) => {
+                if (err) {
+                    console.error('Error removing game from database:', err);
+                    reject(err);
+                }
+                else {
+                    resolve();
+                }
+                processRemoveGameQueue();
+            });
+        }
     });
 }
 // Fetch all pending games from the 'pending_games' table

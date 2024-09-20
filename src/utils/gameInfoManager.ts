@@ -7,15 +7,18 @@ config();
 let channel_id = process.env.channel_id;
 let games: any[] = [];
 
-//TODO: If it has no id stored in the db and no thread it only shows part 2 as the thread message -- NOT a Huge Problem
 //TODO: Make it failsafe?
 //TODO: Make UI Better
 //TODO: Set Up VPN on rasbperry to host it
+//TODO: think about using "better-sqlite3"
 
 // Constants
 const MAX_DESCRIPTION_LENGTH = 4050; // Max length for a single embed description
 const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
+
+// Thread locking object to prevent race conditions
+const threadLocks: Record<string, boolean> = {};
 
 // Function to split long descriptions into multiple embeds
 function splitEmbedDescription(description: string): EmbedBuilder[] {
@@ -87,11 +90,9 @@ function splitEmbedsIntoMessages(embeds: EmbedBuilder[]): { firstMessageEmbeds: 
         console.log(embedLength);
         console.log(totalCharacters + embedLength);
         if (totalCharacters + embedLength > MAX_TOTAL_SIZE) {
-            console.log('2_I did my JOB!111111111111111111111111111111111111111111')
             secondMessageEmbeds.push(embed); // Move the remaining embeds to the second message
             totalCharacters += embedLength;
         } else {
-            console.log('1_I did ALSO DID my JOB!111111111111111111111111111111111111111111')
             firstMessageEmbeds.push(embed);
             totalCharacters += embedLength;
         }
@@ -140,27 +141,21 @@ export async function createThread(client: any) {
 
         // If there are more embeds for a second message, send it
         if (secondMessageEmbeds.length > 0) {
-            console.log("neMessage" + newThread.id)
             await newThread.send({ embeds: secondMessageEmbeds });
         }
     } else {
         const existingThread = await channel.threads.fetch(thread_info.thread_id).catch(() => null);
         if (existingThread) {
             // Edit the existing message in the thread
-            const message = await existingThread.messages.fetch({ limit: 100 }).then((messages: { filter: (arg0: (msg: any) => boolean) => { (): any; new(): any; sort: { (arg0: (a: any, b: any) => number): { (): any; new(): any; first: { (): any; new(): any; }; }; new(): any; }; }; }) => {
-                const newestBotMessage = messages.filter((msg) => msg.author.id === client.user?.id).sort((b, a) => b.createdTimestamp - a.createdTimestamp).first();
-                return newestBotMessage;
-            });
+            const message = await existingThread.messages.fetch({ limit: 100, cache: true }).then((messages: any[]) => messages.reduce((oldest, msg) => msg.createdTimestamp < oldest.createdTimestamp ? msg : oldest, messages[0]));
             if (message) {
                 await message.edit({ embeds: firstMessageEmbeds });
             }
+
             
             // If there's a second message needed, either edit or create a new message
             if (secondMessageEmbeds.length > 0) {
-                const secondMessage = await existingThread.messages.fetch({ limit: 100 }).then((messages: { filter: (arg0: (msg: any) => boolean) => { (): any; new(): any; sort: { (arg0: (a: any, b: any) => number): { (): any; new(): any; first: { (): any; new(): any; }; }; new(): any; }; }; }) => {
-                    const newestBotMessage = messages.filter((msg) => msg.author.id === client.user?.id).sort((a, b) => b.createdTimestamp - a.createdTimestamp).first();
-                    return newestBotMessage;
-                });
+                const secondMessage = await existingThread.messages.fetch({ limit: 1, sort: (a: { createdTimestamp: number; }, b: { createdTimestamp: number; }) => b.createdTimestamp - a.createdTimestamp }).then((messages: { first: () => any; }) => messages.first());
                 if (secondMessage) {
                     console.log('1')
                     console.log(secondMessage.id)
@@ -169,6 +164,7 @@ export async function createThread(client: any) {
                     await existingThread.send({ embeds: secondMessageEmbeds });
                 }
             }
+
         } else {
             // If the thread is not found, create a new one
             const newThread = await channel.threads.create({
@@ -182,9 +178,10 @@ export async function createThread(client: any) {
 
             // If there are more embeds for a second message, send it
             if (secondMessageEmbeds.length > 0) {
-                console.log("neMessage" + newThread.id)
                 await newThread.send({ embeds: secondMessageEmbeds });
             }
         }
     }
+    
+
 }

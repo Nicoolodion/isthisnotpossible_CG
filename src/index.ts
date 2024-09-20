@@ -1,12 +1,10 @@
 import { config } from 'dotenv';
-import { Client, GatewayIntentBits, REST, Routes, TextChannel, EmbedBuilder, Interaction } from 'discord.js';
+import { Client, GatewayIntentBits, REST, Routes, TextChannel, EmbedBuilder, Interaction, Options } from 'discord.js';
 
 import newGamesAddCommand from './commands/newGamesAdd';
 import gamesReviewsCommand from './commands/gamesReview';
 import deleteGamesCommand from './commands/deleteGamesCommand';
-import sqlite3 from 'sqlite3';
 import { createThread } from './utils/gameInfoManager';
-import { sortGamesByName } from './utils/fileUtils';
 
 config();
 
@@ -15,7 +13,11 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
-    ]
+    ],
+    makeCache: Options.cacheWithLimits({
+        MessageManager: 100,  // Cache up to 100 messages per channel
+        UserManager: 70,      // Cache up to 50 users
+    }),
 });
 
 
@@ -80,7 +82,6 @@ client.once('ready', async () => {
     } catch (error) {
         console.error(error);
     }
-
     await createThread(client);
 
 });
@@ -98,24 +99,22 @@ client.on('interactionCreate', async interaction => {
         const input = options.get('name') ? `${options.get('name')?.value}` : undefined;
         const reason = options.get('reason') ? `${options.get('reason')?.value}` : undefined;
 
-        const channelId = process.env.channel_id;
-        let channel;
-        if (channelId) {
-            channel = client.channels.cache.get(channelId) as TextChannel;
-        }
 
+        const start = performance.now();
         if (commandName === 'new-games-add') {
             await newGamesAddCommand.execute(interaction);
-            sortGamesByName();
+            //sortGamesByName();
             await createThread(client);
         } else if (commandName === 'review-games') {
             await gamesReviewsCommand.execute(interaction);
-            sortGamesByName();
+            //sortGamesByName();
             await createThread(client);
         } else if (commandName === 'delete-games') {
             await deleteGamesCommand.execute(interaction);
             await createThread(client);
         }
+        const end = performance.now();
+        console.log(`Command: Responded to interaction in ${end - start}ms`);
 
     } else if (interaction.isButton() || interaction.isSelectMenu()) {
         const { customId, user } = interaction;

@@ -16,14 +16,17 @@ const fileUtils_1 = require("../utils/fileUtils");
 (0, dotenv_1.config)();
 let channel_id = process.env.channel_id;
 let games = [];
-//TODO: If it has no id stored in the db and no thread it only shows part 2 as the thread message
+//TODO: If it has no id stored in the db and no thread it only shows part 2 as the thread message -- NOT a Huge Problem
 //TODO: Make it failsafe?
 //TODO: Make UI Better
-//TODO: Look into weird sorting
+//TODO: Set Up VPN on rasbperry to host it
+//TODO: think about using "better-sqlite3"
 // Constants
 const MAX_DESCRIPTION_LENGTH = 4050; // Max length for a single embed description
 const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
+// Thread locking object to prevent race conditions
+const threadLocks = {};
 // Function to split long descriptions into multiple embeds
 function splitEmbedDescription(description) {
     const embeds = [];
@@ -134,19 +137,15 @@ function createThread(client) {
             const existingThread = yield channel.threads.fetch(thread_info.thread_id).catch(() => null);
             if (existingThread) {
                 // Edit the existing message in the thread
-                const message = yield existingThread.messages.fetch({ limit: 100 }).then((messages) => {
-                    const newestBotMessage = messages.filter((msg) => { var _a; return msg.author.id === ((_a = client.user) === null || _a === void 0 ? void 0 : _a.id); }).sort((b, a) => b.createdTimestamp - a.createdTimestamp).first();
-                    return newestBotMessage;
-                });
+                const message = yield existingThread.messages.fetch({ limit: 100, cache: true }).then((messages) => messages.reduce((oldest, msg) => msg.createdTimestamp < oldest.createdTimestamp ? msg : oldest, messages[0]));
                 if (message) {
                     yield message.edit({ embeds: firstMessageEmbeds });
                 }
                 // If there's a second message needed, either edit or create a new message
                 if (secondMessageEmbeds.length > 0) {
-                    const secondMessage = yield existingThread.messages.fetch({ limit: 100 }).then((messages) => {
-                        const newestBotMessage = messages.filter((msg) => { var _a; return msg.author.id === ((_a = client.user) === null || _a === void 0 ? void 0 : _a.id); }).sort((a, b) => b.createdTimestamp - a.createdTimestamp).first();
-                        return newestBotMessage;
-                    });
+                    console.time('fetchAllGames');
+                    const secondMessage = yield existingThread.messages.fetch({ limit: 1, sort: (a, b) => b.createdTimestamp - a.createdTimestamp }).then((messages) => messages.first());
+                    console.timeEnd('fetchAllGames');
                     if (secondMessage) {
                         console.log('1');
                         console.log(secondMessage.id);
