@@ -19,6 +19,7 @@ const newGamesAdd_1 = __importDefault(require("./commands/newGamesAdd"));
 const gamesReview_1 = __importDefault(require("./commands/gamesReview"));
 const deleteGamesCommand_1 = __importDefault(require("./commands/deleteGamesCommand"));
 const gameInfoManager_1 = require("./utils/gameInfoManager");
+const fileUtils_1 = require("./utils/fileUtils");
 (0, dotenv_1.config)();
 const client = new discord_js_1.Client({
     intents: [
@@ -81,7 +82,7 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, gameInfoManager_1.createThread)(client);
 }));
 client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c;
+    var _a, _b;
     if (interaction.isCommand()) {
         const { commandName, user, options } = interaction;
         const username = user.username;
@@ -90,8 +91,8 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         const action = showID
             ? `\`/${commandName}\` (ID: ${userId})`
             : `\`/${commandName}\``;
-        const input = options.get('name') ? `${(_b = options.get('name')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
-        const reason = options.get('reason') ? `${(_c = options.get('reason')) === null || _c === void 0 ? void 0 : _c.value}` : undefined;
+        const input = options.get('name') ? `${(_a = options.get('name')) === null || _a === void 0 ? void 0 : _a.value}` : undefined;
+        const reason = options.get('reason') ? `${(_b = options.get('reason')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
         const channelId = process.env.channel_id;
         let channel;
         if (channelId) {
@@ -99,10 +100,12 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         }
         if (commandName === 'new-games-add') {
             yield newGamesAdd_1.default.execute(interaction);
+            (0, fileUtils_1.sortGamesByName)();
             yield (0, gameInfoManager_1.createThread)(client);
         }
         else if (commandName === 'review-games') {
             yield gamesReview_1.default.execute(interaction);
+            (0, fileUtils_1.sortGamesByName)();
             yield (0, gameInfoManager_1.createThread)(client);
         }
         else if (commandName === 'delete-games') {

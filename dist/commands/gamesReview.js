@@ -13,6 +13,8 @@ const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const permissions_1 = require("../utils/permissions");
 const fileUtils_1 = require("../utils/fileUtils");
+const gameInfoManager_1 = require("../utils/gameInfoManager");
+const __1 = require("..");
 (0, dotenv_1.config)();
 const MAX_DESCRIPTION_LENGTH = 4096; // Discord limit for description length
 const GAMES_PER_EMBED = 10; // Number of games per embed
@@ -34,7 +36,10 @@ const gamesReviewsCommand = {
         }
         const pendingGames = yield (0, fileUtils_1.fetchAllPendingGames)(); // Fetch pending games from DB
         if (pendingGames.length === 0) {
-            yield interaction.reply({ content: "There are no pending games to review.", ephemeral: true });
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription('There are no pending games to review.');
+            yield interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
         // Split the game list into multiple embeds
@@ -85,6 +90,7 @@ const gamesReviewsCommand = {
                     ],
                     components: []
                 });
+                yield (0, gameInfoManager_1.createThread)(__1.client);
             }
             else if (interaction.customId === 'remove') {
                 const options = pendingGames.map((game, index) => ({

@@ -42,7 +42,7 @@ const newGamesAddCommand = {
         else {
             targetFile = 'games.json';
             alreadyOnListMessage = `The game \`${gameName}\` is already on the list.`;
-            addedMessage = `The game \`${gameName}\` has been added to the list.`;
+            addedMessage = `The game \`${gameName}\` has been sorted and added to the list.`;
         }
         const gamesList = yield (0, gameUtils_1.loadGames)();
         const isGameOnList = gamesList.some((game) => game.name.toLowerCase() === gameName.toLowerCase());
@@ -53,6 +53,7 @@ const newGamesAddCommand = {
             //    .setStyle(ButtonStyle.Success);
             //const row = new ActionRowBuilder<ButtonBuilder>()
             //    .addComponents(overrideButton);
+            //TODO: Make thid look better
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);

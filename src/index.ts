@@ -6,6 +6,7 @@ import gamesReviewsCommand from './commands/gamesReview';
 import deleteGamesCommand from './commands/deleteGamesCommand';
 import sqlite3 from 'sqlite3';
 import { createThread } from './utils/gameInfoManager';
+import { sortGamesByName } from './utils/fileUtils';
 
 config();
 
@@ -105,9 +106,11 @@ client.on('interactionCreate', async interaction => {
 
         if (commandName === 'new-games-add') {
             await newGamesAddCommand.execute(interaction);
+            sortGamesByName();
             await createThread(client);
         } else if (commandName === 'review-games') {
             await gamesReviewsCommand.execute(interaction);
+            sortGamesByName();
             await createThread(client);
         } else if (commandName === 'delete-games') {
             await deleteGamesCommand.execute(interaction);

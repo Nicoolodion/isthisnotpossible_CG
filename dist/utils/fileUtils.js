@@ -12,19 +12,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchPendingGameByName = exports.approvePendingGame = exports.removePendingGameFromDatabase = exports.addPendingGameToDatabase = exports.fetchAllPendingGames = exports.removeGameFromDatabase = exports.addGameToDatabase = exports.fetchAllGames = exports.setThreadInfo = exports.fetchThreadInfo = void 0;
+exports.sortGamesByName = sortGamesByName;
+exports.fetchThreadInfo = fetchThreadInfo;
+exports.setThreadInfo = setThreadInfo;
+exports.fetchAllGames = fetchAllGames;
+exports.addGameToDatabase = addGameToDatabase;
+exports.removeGameFromDatabase = removeGameFromDatabase;
+exports.fetchAllPendingGames = fetchAllPendingGames;
+exports.addPendingGameToDatabase = addPendingGameToDatabase;
+exports.removePendingGameFromDatabase = removePendingGameFromDatabase;
+exports.approvePendingGame = approvePendingGame;
+exports.fetchPendingGameByName = fetchPendingGameByName;
 const sqlite3_1 = __importDefault(require("sqlite3"));
 const path_1 = __importDefault(require("path"));
 // Open the SQLite database connection
 const dbPath = path_1.default.resolve(__dirname, '../../dist/data/games.db');
-const db = new sqlite3_1.default.Database(dbPath, sqlite3_1.default.OPEN_READWRITE, (err) => {
-    if (err) {
-        console.error('Error opening database:', err);
-    }
-    else {
-        console.log('Connected to the SQLite database.');
-    }
-});
+let db;
+try {
+    db = new sqlite3_1.default.Database(dbPath, sqlite3_1.default.OPEN_READWRITE | sqlite3_1.default.OPEN_CREATE, (err) => {
+        if (err) {
+            console.error('Error opening database:', err);
+        }
+        else {
+            console.log('Connected to the SQLite database.');
+        }
+    });
+}
+catch (err) {
+    console.error('Error creating database:', err);
+    process.exit(1);
+}
 // Initialize the tables and indexes for games and pending games
 db.serialize(() => {
     // Use WAL mode for better performance in write-heavy workloads
@@ -57,6 +74,26 @@ db.serialize(() => {
     db.run('CREATE INDEX IF NOT EXISTS idx_games_name ON games(name);');
     db.run('CREATE INDEX IF NOT EXISTS idx_pending_games_name ON pending_games(name);');
 });
+// Sort the games table by name in alphabetical order (a-z)
+function sortGamesByName() {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT * FROM games ORDER BY name ASC', (err, rows) => {
+            if (err) {
+                console.error('Error sorting games:', err);
+                reject(err);
+            }
+            else {
+                // Optionally, if you need to perform any additional operations with the sorted rows
+                // you could process `rows` here before resolving.
+                console.log('Games sorted alphabetically:');
+                console.table(rows);
+                // As the sorting itself doesn't modify the database, there's no need to re-save anything.
+                // We just need to retrieve and use the sorted data.
+                resolve();
+            }
+        });
+    });
+}
 // Fetch the thread_id and message_id from the 'thread_info' table
 function fetchThreadInfo() {
     return new Promise((resolve, reject) => {
@@ -71,7 +108,6 @@ function fetchThreadInfo() {
         });
     });
 }
-exports.fetchThreadInfo = fetchThreadInfo;
 // Overwrite the thread_id and message_id in the 'thread_info' table
 function setThreadInfo(thread_id, message_id) {
     return new Promise((resolve, reject) => {
@@ -94,11 +130,10 @@ function setThreadInfo(thread_id, message_id) {
         });
     });
 }
-exports.setThreadInfo = setThreadInfo;
-// Fetch all games from the 'games' table
+// Fetch all games from the 'games' table, sorted alphabetically by name (case insensitive)
 function fetchAllGames() {
     return new Promise((resolve, reject) => {
-        db.all('SELECT * FROM games', (err, rows) => {
+        db.all('SELECT * FROM games ORDER BY LOWER(name) ASC', (err, rows) => {
             if (err) {
                 console.error('Error fetching games:', err);
                 reject(err);
@@ -109,7 +144,6 @@ function fetchAllGames() {
         });
     });
 }
-exports.fetchAllGames = fetchAllGames;
 // Add a game to the 'games' table
 function addGameToDatabase(name, cracked, reason) {
     return new Promise((resolve, reject) => {
@@ -124,7 +158,6 @@ function addGameToDatabase(name, cracked, reason) {
         });
     });
 }
-exports.addGameToDatabase = addGameToDatabase;
 // Remove a game from the 'games' table
 function removeGameFromDatabase(name) {
     return new Promise((resolve, reject) => {
@@ -139,7 +172,6 @@ function removeGameFromDatabase(name) {
         });
     });
 }
-exports.removeGameFromDatabase = removeGameFromDatabase;
 // Fetch all pending games from the 'pending_games' table
 function fetchAllPendingGames() {
     return new Promise((resolve, reject) => {
@@ -154,7 +186,6 @@ function fetchAllPendingGames() {
         });
     });
 }
-exports.fetchAllPendingGames = fetchAllPendingGames;
 // Add a game to the 'pending_games' table
 function addPendingGameToDatabase(name, cracked, reason) {
     return new Promise((resolve, reject) => {
@@ -169,7 +200,6 @@ function addPendingGameToDatabase(name, cracked, reason) {
         });
     });
 }
-exports.addPendingGameToDatabase = addPendingGameToDatabase;
 // Remove a game from the 'pending_games' table
 function removePendingGameFromDatabase(name) {
     return new Promise((resolve, reject) => {
@@ -184,7 +214,6 @@ function removePendingGameFromDatabase(name) {
         });
     });
 }
-exports.removePendingGameFromDatabase = removePendingGameFromDatabase;
 // Move a pending game to the main games list
 function approvePendingGame(name) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -213,7 +242,6 @@ function approvePendingGame(name) {
         }
     }));
 }
-exports.approvePendingGame = approvePendingGame;
 // Fetch a single pending game by name
 function fetchPendingGameByName(name) {
     return new Promise((resolve, reject) => {
@@ -228,5 +256,4 @@ function fetchPendingGameByName(name) {
         });
     });
 }
-exports.fetchPendingGameByName = fetchPendingGameByName;
 exports.default = db;

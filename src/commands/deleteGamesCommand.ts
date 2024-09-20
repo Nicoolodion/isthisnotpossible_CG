@@ -37,7 +37,10 @@ const deleteGamesCommand = {
         }
 
         if (matchingGames.length > 5) {
-            await interaction.reply({ content: `Too many results found. Please refine your search.`, ephemeral: true });
+            const embed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription(`Too many results found. Please refine your search.`);
+            await interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
 

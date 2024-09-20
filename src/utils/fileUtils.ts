@@ -8,13 +8,19 @@ interface ThreadInfoRow {
 
 // Open the SQLite database connection
 const dbPath = path.resolve(__dirname, '../../dist/data/games.db');
-const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
-    if (err) {
-        console.error('Error opening database:', err);
-    } else {
-        console.log('Connected to the SQLite database.');
-    }
-});
+let db: sqlite3.Database;
+try {
+     db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+        if (err) {
+            console.error('Error opening database:', err);
+        } else {
+            console.log('Connected to the SQLite database.');
+        }
+    });
+} catch (err) {
+    console.error('Error creating database:', err);
+    process.exit(1);
+}
 
 // Initialize the tables and indexes for games and pending games
 db.serialize(() => {
@@ -51,6 +57,30 @@ db.serialize(() => {
     db.run('CREATE INDEX IF NOT EXISTS idx_pending_games_name ON pending_games(name);');
 });
 
+// Sort the games table by name in alphabetical order (a-z)
+export function sortGamesByName(): Promise<void> {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT * FROM games ORDER BY name ASC', (err, rows) => {
+            if (err) {
+                console.error('Error sorting games:', err);
+                reject(err);
+            } else {
+                // Optionally, if you need to perform any additional operations with the sorted rows
+                // you could process `rows` here before resolving.
+                console.log('Games sorted alphabetically:');
+                console.table(rows);
+
+                // As the sorting itself doesn't modify the database, there's no need to re-save anything.
+                // We just need to retrieve and use the sorted data.
+                resolve();
+            }
+        });
+    });
+}
+
+
+
+
 // Fetch the thread_id and message_id from the 'thread_info' table
 export function fetchThreadInfo(): Promise<{ thread_id: string, message_id: string } | null> {
     return new Promise((resolve, reject) => {
@@ -86,10 +116,10 @@ export function setThreadInfo(thread_id: string, message_id: string): Promise<vo
     });
 }
 
-// Fetch all games from the 'games' table
+// Fetch all games from the 'games' table, sorted alphabetically by name (case insensitive)
 export function fetchAllGames(): Promise<any[]> {
     return new Promise((resolve, reject) => {
-        db.all('SELECT * FROM games', (err, rows) => {
+        db.all('SELECT * FROM games ORDER BY LOWER(name) ASC', (err, rows) => {
             if (err) {
                 console.error('Error fetching games:', err);
                 reject(err);

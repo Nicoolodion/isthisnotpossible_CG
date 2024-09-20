@@ -4,14 +4,6 @@
         ""
     ],
     "overrides": {
-        "request-blacklist-info": {
-            "allow": [
-                ""
-            ],
-            "deny": [
-                ""
-            ]
-        },
         "new-games-add": {
             "allow": [
                 ""

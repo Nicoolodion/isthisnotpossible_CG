@@ -42,7 +42,10 @@ const deleteGamesCommand = {
             return;
         }
         if (matchingGames.length > 5) {
-            yield interaction.reply({ content: `Too many results found. Please refine your search.`, ephemeral: true });
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription(`Too many results found. Please refine your search.`);
+            yield interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
         // Create an embed for the games found

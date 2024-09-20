@@ -2,6 +2,8 @@ import { config } from 'dotenv';
 import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { fetchAllPendingGames, approvePendingGame, removePendingGameFromDatabase } from '../utils/fileUtils';
+import { createThread } from '../utils/gameInfoManager';
+import { client } from '..';
 
 config();
 
@@ -28,7 +30,10 @@ const gamesReviewsCommand = {
         const pendingGames = await fetchAllPendingGames(); // Fetch pending games from DB
 
         if (pendingGames.length === 0) {
-            await interaction.reply({ content: "There are no pending games to review.", ephemeral: true });
+            const embed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription('There are no pending games to review.');
+            await interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
 
@@ -90,6 +95,7 @@ const gamesReviewsCommand = {
                     ],
                     components: [] 
                 });
+                await createThread(client);
             } else if (interaction.customId === 'remove') {
                 const options = pendingGames.map((game: any, index: number) => ({
                     label: game.name,
