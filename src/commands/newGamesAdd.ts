@@ -26,7 +26,6 @@ const newGamesAddCommand = {
             await interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
-
         const gameName = interaction.options.get('name')?.value as string;
         const reason = interaction.options.get('reason')?.value as string | null;
         const platform = interaction.options.get('platform')?.value as  string;
@@ -87,12 +86,14 @@ const newGamesAddCommand = {
                 reason: reason,
                 platform: platform
             };
+
             if (hasTeamRole && !hasUploaderOrAdminRole) {
                 await addPendingGame(newGame);
             } else {
                 await addGame(newGame);
             }
 
+            const startTime = performance.now();
             const embed = new EmbedBuilder()
                 .setColor('#00FF00')
                 .setTitle(`**${hasTeamRole && !hasUploaderOrAdminRole ? 'Game Submitted for Review!' : 'Game Added!'}**`)
@@ -100,6 +101,7 @@ const newGamesAddCommand = {
                 .setFooter({ text: 'Thanks for contributing!' })
                 .setTimestamp()
             await interaction.reply({ embeds: [embed], ephemeral: true });
+            console.log(`Addtime: ${performance.now() - startTime}ms`);
         }
     },
 

@@ -19,12 +19,12 @@ let games = [];
 //TODO: Make UI Better
 //TODO: Set Up VPN on rasbperry to host it
 //TODO: Add multiple messages / Optimize the current
-//TODO: Let the other Bot sort this list somehow. Search Steam for game
+//TODO: Add Tags or else it won't work!
 //TODO: Make it failsafe?       Should be?
-//TODO: think about using "better-sqlite3"
 const MAX_DESCRIPTION_LENGTH = 4050; // Max length for a single embed description
 const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
+const EXTRA_MESSAGES = parseInt(process.env.EXTRA_MESSAGES || '1'); // Default to 1 if not provided
 const platformTitles = {
     Games: '🎮 Games',
     Software: '💻 Software',
@@ -67,15 +67,18 @@ function splitEmbedDescription(title, description) {
     }
     return embeds;
 }
-// Function to split embeds into two messages if the total character count exceeds 6000
+// Function to split embeds into multiple messages with a configurable number of extra messages
 function splitEmbedsIntoMessages(embeds) {
     var _a;
     const messageEmbeds = [];
     let currentMessage = [];
     let totalCharacters = 0;
+    const maxMessages = EXTRA_MESSAGES + 1; // 1 for the main thread message
     for (const embed of embeds) {
         const embedLength = ((_a = embed.data.description) === null || _a === void 0 ? void 0 : _a.length) || 0;
         if (totalCharacters + embedLength > MAX_TOTAL_SIZE || currentMessage.length >= MAX_EMBEDS) {
+            if (messageEmbeds.length >= maxMessages)
+                break; // Stop if max messages reached
             messageEmbeds.push(currentMessage);
             currentMessage = [];
             totalCharacters = 0;
@@ -83,7 +86,7 @@ function splitEmbedsIntoMessages(embeds) {
         currentMessage.push(embed);
         totalCharacters += embedLength;
     }
-    if (currentMessage.length > 0) {
+    if (currentMessage.length > 0 && messageEmbeds.length < maxMessages) {
         messageEmbeds.push(currentMessage);
     }
     return messageEmbeds;
@@ -117,7 +120,8 @@ function createThread(client) {
                 reason: 'Creating a thread for game info and sending message...',
                 message: {
                     embeds: messageEmbeds[0]
-                }
+                },
+                appliedTags: [process.env.TAG_INFO]
             });
             (0, fileUtils_1.setThreadInfo)(newThread.id, ((_a = newThread.firstMessage) === null || _a === void 0 ? void 0 : _a.id) || '');
             // Send additional messages if there are more embeds
@@ -152,7 +156,8 @@ function createThread(client) {
                     reason: 'Creating a thread for game info and sending message...',
                     message: {
                         embeds: messageEmbeds[0]
-                    }
+                    },
+                    appliedTags: [process.env.TAG_INFO]
                 });
                 (0, fileUtils_1.setThreadInfo)(newThread.id, ((_c = newThread.firstMessage) === null || _c === void 0 ? void 0 : _c.id) || '');
                 // Send any remaining messages
