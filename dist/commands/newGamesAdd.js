@@ -17,13 +17,12 @@ const fileUtils_1 = require("../utils/fileUtils");
 (0, dotenv_1.config)();
 const newGamesAddCommand = {
     execute: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g;
         const userRoles = (_a = interaction.member) === null || _a === void 0 ? void 0 : _a.roles;
         const { admins: [adminUserId] } = require('../data/permissions.json');
         const overrides = require('../data/permissions.json').overrides['new-games-add'];
         const allowedUserIds = overrides.allow;
         const disabledUserIds = overrides.deny;
-        console.log(adminUserId);
         const hasTeamRole = (0, permissions_1.checkPermissions)(userRoles, (_b = process.env.team) !== null && _b !== void 0 ? _b : '');
         const hasUploaderOrAdminRole = (0, permissions_1.checkPermissions)(userRoles, (_c = process.env.admin) !== null && _c !== void 0 ? _c : '') || (0, permissions_1.checkPermissions)(userRoles, (_d = process.env.uploader) !== null && _d !== void 0 ? _d : '') || allowedUserIds.includes(interaction.user.id) || interaction.user.id === adminUserId;
         if (disabledUserIds.includes(interaction.user.id) || (!hasTeamRole && !hasUploaderOrAdminRole && interaction.user.id !== adminUserId)) {
@@ -35,8 +34,8 @@ const newGamesAddCommand = {
         }
         const gameName = (_e = interaction.options.get('name')) === null || _e === void 0 ? void 0 : _e.value;
         const reason = (_f = interaction.options.get('reason')) === null || _f === void 0 ? void 0 : _f.value;
+        const platform = (_g = interaction.options.get('platform')) === null || _g === void 0 ? void 0 : _g.value;
         if (gameName.length >= 100) {
-            console.log("I was triggered, daddy!");
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription('The Name is too long. Please find a shorter Version :)');
@@ -44,7 +43,6 @@ const newGamesAddCommand = {
             return;
         }
         if (reason && reason.length >= 100) {
-            console.log("I was triggered, daddy!");
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription('The Reason is too long. Please find a shorter Version :)');
@@ -60,7 +58,7 @@ const newGamesAddCommand = {
         else {
             targetFile = 'games.json';
             alreadyOnListMessage = `The game \`${gameName}\` is already on the list.`;
-            addedMessage = `The game \`${gameName}\` has been sorted and added to the list.`;
+            addedMessage = `The game \`${gameName}\` has been added to the list.`;
         }
         const gamesList = yield (0, gameUtils_1.loadGames)();
         const pendingGamesList = yield (0, fileUtils_1.fetchAllPendingGames)();
@@ -87,7 +85,8 @@ const newGamesAddCommand = {
             const newGame = {
                 name: gameName,
                 cracked: false,
-                reason: reason
+                reason: reason,
+                platform: platform
             };
             if (hasTeamRole && !hasUploaderOrAdminRole) {
                 yield (0, gameUtils_1.addPendingGame)(newGame);
@@ -113,6 +112,7 @@ const newGamesAddCommand = {
             const reasonMatch = interaction.message.content.match(/Reason provided: `([^`]*)`/);
             const gameName = gameNameMatch ? gameNameMatch[1] : null;
             const reason = reasonMatch ? reasonMatch[1] : 'No reason provided';
+            const platform = interaction.message.content.match(/Platform: `([^`]*)`/)[1];
             if (!gameName) {
                 yield interaction.reply({ content: 'Error: Game name could not be determined.', ephemeral: true });
                 return;
@@ -120,7 +120,8 @@ const newGamesAddCommand = {
             const newGame = {
                 name: gameName,
                 cracked: false,
-                reason: reason.trim() || 'No reason provided'
+                reason: reason.trim() || 'No reason provided',
+                platform: platform
             };
             const targetFile = isPendingOverride ? 'pending-games.json' : 'games.json';
             if (isPendingOverride) {

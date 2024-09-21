@@ -63,7 +63,7 @@ function searchGamesExact(name) {
 }
 function addGame(game) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield (0, fileUtils_1.addGameToDatabase)(game.name, game.cracked, game.reason);
+        yield (0, fileUtils_1.addGameToDatabase)(game.name, game.cracked, game.reason, game.platform);
         gamesCache = null; // Invalidate cache
     });
 }
@@ -82,6 +82,6 @@ function removeGame(name) {
 }
 function addPendingGame(game) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield (0, fileUtils_1.addPendingGameToDatabase)(game.name, game.cracked, game.reason);
+        yield (0, fileUtils_1.addPendingGameToDatabase)(game.name, game.cracked, game.reason, game.platform);
     });
 }

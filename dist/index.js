@@ -58,6 +58,31 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
                     type: 3, // String
                     description: 'Reason why the game can\'t be cracked',
                     required: false,
+                },
+                {
+                    name: 'platform',
+                    type: 3, // String
+                    description: 'Category of the game/program',
+                    required: false,
+                    choices: [
+                        {
+                            name: 'Games',
+                            value: ''
+                        },
+                        {
+                            name: 'VR',
+                            value: 'VR'
+                        },
+                        {
+                            name: 'Software',
+                            value: 'Software'
+                        },
+                        {
+                            name: 'Other',
+                            value: 'Other'
+                        }
+                    ],
+                    defaultValue: 'games'
                 }
             ]
         }, {
@@ -82,10 +107,7 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         console.error(error);
     }
-    const start = performance.now();
     yield (0, gameInfoManager_1.createThread)(client);
-    const end = performance.now();
-    console.log(`createThread: Responded to interaction in ${end - start}ms`);
 }));
 client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
@@ -99,6 +121,7 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             : `\`/${commandName}\``;
         const input = options.get('name') ? `${(_a = options.get('name')) === null || _a === void 0 ? void 0 : _a.value}` : undefined;
         const reason = options.get('reason') ? `${(_b = options.get('reason')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
+        const start = performance.now();
         if (commandName === 'new-games-add') {
             yield newGamesAdd_1.default.execute(interaction);
             //sortGamesByName();

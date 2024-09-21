@@ -29,6 +29,7 @@ const newGamesAddCommand = {
 
         const gameName = interaction.options.get('name')?.value as string;
         const reason = interaction.options.get('reason')?.value as string | null;
+        const platform = interaction.options.get('platform')?.value as  string;
         
         if (gameName.length >= 100) {
             const embed = new EmbedBuilder()
@@ -53,7 +54,7 @@ const newGamesAddCommand = {
         } else {
             targetFile = 'games.json';
             alreadyOnListMessage = `The game \`${gameName}\` is already on the list.`;
-            addedMessage = `The game \`${gameName}\` has been sorted and added to the list.`;
+            addedMessage = `The game \`${gameName}\` has been added to the list.`;
         }
 
         const gamesList = await loadGames();
@@ -83,7 +84,8 @@ const newGamesAddCommand = {
             const newGame = {
                 name: gameName,
                 cracked: false,
-                reason: reason
+                reason: reason,
+                platform: platform
             };
             if (hasTeamRole && !hasUploaderOrAdminRole) {
                 await addPendingGame(newGame);
@@ -111,6 +113,7 @@ const newGamesAddCommand = {
             const reasonMatch = interaction.message.content.match(/Reason provided: `([^`]*)`/);
             const gameName = gameNameMatch ? gameNameMatch[1] : null;
             const reason = reasonMatch ? reasonMatch[1] : 'No reason provided';
+            const platform = interaction.message.content.match(/Platform: `([^`]*)`/)[1];
             if (!gameName) {
                 await interaction.reply({ content: 'Error: Game name could not be determined.', ephemeral: true });
                 return;
@@ -118,7 +121,8 @@ const newGamesAddCommand = {
             const newGame = {
                 name: gameName,
                 cracked: false,
-                reason: reason.trim() || 'No reason provided'
+                reason: reason.trim() || 'No reason provided',
+                platform:  platform
               };
 
             const targetFile = isPendingOverride ? 'pending-games.json' : 'games.json';

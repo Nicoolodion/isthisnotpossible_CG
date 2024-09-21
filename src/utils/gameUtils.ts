@@ -13,6 +13,7 @@ interface Game {
     name: string;
     cracked: boolean;
     reason: string | null;
+    platform: string
 }
 
 let gamesCache: Game[] | null = null; // Cache for games
@@ -57,7 +58,7 @@ export async function searchGamesExact(name: string): Promise<Game[]> {
 }
 
 export async function addGame(game: Game): Promise<void> {
-    await addGameToDatabase(game.name, game.cracked, game.reason);
+    await addGameToDatabase(game.name, game.cracked, game.reason, game.platform);
     gamesCache = null; // Invalidate cache
 }
 
@@ -73,5 +74,5 @@ export async function removeGame(name: string): Promise<boolean> {
 }
 
 export async function addPendingGame(game: Game): Promise<void> {
-    await addPendingGameToDatabase(game.name, game.cracked, game.reason);
+    await addPendingGameToDatabase(game.name, game.cracked, game.reason, game.platform);
 }

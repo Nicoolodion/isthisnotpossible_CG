@@ -16,160 +16,148 @@ const fileUtils_1 = require("../utils/fileUtils");
 (0, dotenv_1.config)();
 let channel_id = process.env.channel_id;
 let games = [];
-//TODO: If it has no id stored in the db and no thread it only shows part 2 as the thread message -- NOT a Huge Problem
-//TODO: Make it failsafe?
 //TODO: Make UI Better
 //TODO: Set Up VPN on rasbperry to host it
+//TODO: Add multiple messages / Optimize the current
+//TODO: Let the other Bot sort this list somehow. Search Steam for game
+//TODO: Make it failsafe?       Should be?
 //TODO: think about using "better-sqlite3"
-// Constants
 const MAX_DESCRIPTION_LENGTH = 4050; // Max length for a single embed description
 const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
-// Thread locking object to prevent race conditions
-const threadLocks = {};
+const platformTitles = {
+    Games: '🎮 Games',
+    Software: '💻 Software',
+    VR: ':eyeglasses:  VR',
+    Other: '🌀 Other',
+};
 // Function to split long descriptions into multiple embeds
-function splitEmbedDescription(description) {
+function splitEmbedDescription(title, description) {
     const embeds = [];
     let currentDescription = '';
     let totalCharacters = 0;
-    let characterCount = 0; // Add a character counter
     const lines = description.split('\n');
     for (const line of lines) {
         const formattedLine = ` ${line.trim()}`;
-        // Check if adding the new line exceeds the max length for the current embed
         if (currentDescription.length + formattedLine.length + 1 > MAX_DESCRIPTION_LENGTH) {
-            // Push the current embed if it exceeds the max length
             embeds.push(new discord_js_1.EmbedBuilder()
-                .setTitle(`Uncrackable Games - Part ${embeds.length + 1}`)
+                .setTitle(`${title} - Part ${embeds.length + 1}`)
                 .setDescription(`${currentDescription}`)
                 .setColor(0x0099ff)
-                .setFooter({ text: `----------------------------------------\nLast updated: ${new Date().toLocaleDateString()}` }) // Footer for pagination
+                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
+            //.setFooter({ text: `----------------------------------------\nLast updated: ${new Date().toLocaleDateString()}` }) // Footer for pagination
             );
-            currentDescription = ''; // Reset the current description for the next embed
+            currentDescription = '';
             totalCharacters = 0;
         }
-        // Add the current line to the description
         currentDescription = currentDescription ? `${currentDescription}\n${formattedLine}` : formattedLine;
-        // Update the total character count and character count
         totalCharacters += formattedLine.length + 1;
-        characterCount += formattedLine.length;
-        // If total characters exceed the limit or we have enough embeds, stop
         if (totalCharacters >= MAX_TOTAL_SIZE || embeds.length >= MAX_EMBEDS - 1) {
             break;
         }
     }
-    // Add the last embed if there's any remaining content
     if (currentDescription && embeds.length < MAX_EMBEDS) {
         embeds.push(new discord_js_1.EmbedBuilder()
-            .setTitle(`Uncrackable Games - Part ${embeds.length + 1}`)
+            .setTitle(`${title} - Part ${embeds.length + 1}`)
             .setDescription(currentDescription)
             .setColor(0x0099ff)
-            .setFooter({ text: `----------------------------------------\nLast updated: ${new Date().toLocaleDateString()}` }) // Footer for pagination
+            .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
+        //.setFooter({ text: `----------------------------------------\nLast updated: ${new Date().toLocaleDateString()}` }) // Footer for pagination
         );
     }
-    // Log the character count at the end
-    console.log(`Total characters: ${characterCount}`);
-    console.log(`Total embeds: ${embeds.length}`);
     return embeds;
 }
 // Function to split embeds into two messages if the total character count exceeds 6000
 function splitEmbedsIntoMessages(embeds) {
     var _a;
-    let firstMessageEmbeds = [];
-    let secondMessageEmbeds = [];
+    const messageEmbeds = [];
+    let currentMessage = [];
     let totalCharacters = 0;
-    console.log(embeds.length);
     for (const embed of embeds) {
         const embedLength = ((_a = embed.data.description) === null || _a === void 0 ? void 0 : _a.length) || 0;
-        console.log(totalCharacters);
-        console.log(embedLength);
-        console.log(totalCharacters + embedLength);
-        if (totalCharacters + embedLength > MAX_TOTAL_SIZE) {
-            console.log('2_I did my JOB!111111111111111111111111111111111111111111');
-            secondMessageEmbeds.push(embed); // Move the remaining embeds to the second message
-            totalCharacters += embedLength;
+        if (totalCharacters + embedLength > MAX_TOTAL_SIZE || currentMessage.length >= MAX_EMBEDS) {
+            messageEmbeds.push(currentMessage);
+            currentMessage = [];
+            totalCharacters = 0;
         }
-        else {
-            console.log('1_I did ALSO DID my JOB!111111111111111111111111111111111111111111');
-            firstMessageEmbeds.push(embed);
-            totalCharacters += embedLength;
-        }
+        currentMessage.push(embed);
+        totalCharacters += embedLength;
     }
-    return { firstMessageEmbeds, secondMessageEmbeds };
+    if (currentMessage.length > 0) {
+        messageEmbeds.push(currentMessage);
+    }
+    return messageEmbeds;
 }
 function createThread(client) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
+        var _a, _b, _c;
         const channel = client.channels.cache.get(channel_id);
         let thread_info = yield (0, fileUtils_1.fetchThreadInfo)();
         const newGames = yield (0, fileUtils_1.fetchAllGames)();
         if (JSON.stringify(newGames) === JSON.stringify(games))
             return;
         games = newGames;
-        // Build the game descriptions list with better formatting
-        const gameDescriptions = games.length
-            ? games.map(game => game.reason
-                ? `**${game.name}**\n*Reason: ${game.reason}*`
-                : `**${game.name}**`).join('\n\n') // Proper spacing between games
-            : 'No games available';
-        // Split descriptions into multiple embeds
-        const embeds = splitEmbedDescription(gameDescriptions);
-        // Split into two messages if necessary
-        const { firstMessageEmbeds, secondMessageEmbeds } = splitEmbedsIntoMessages(embeds);
+        const platforms = ['Games', 'Software', 'VR', 'Other'];
+        const platformEmbeds = [];
+        // Build embeds for each platform
+        for (const platform of platforms) {
+            const gamesForPlatform = games.filter(game => game.platform === platform || (!game.platform && platform === 'Games'));
+            if (gamesForPlatform.length > 0) {
+                const gameDescriptions = gamesForPlatform.map(game => game.reason ? `**${game.name}**\n*Reason: ${game.reason}*` : `**${game.name}**`).join('\n\n');
+                const platformEmbedDescription = splitEmbedDescription(platformTitles[platform], gameDescriptions);
+                platformEmbeds.push(...platformEmbedDescription);
+            }
+        }
+        // Split platform embeds across multiple messages
+        const messageEmbeds = splitEmbedsIntoMessages(platformEmbeds);
         if (!(thread_info === null || thread_info === void 0 ? void 0 : thread_info.thread_id)) {
-            // Create a new thread
+            // Create a new thread and send the first message with the initial embeds
             const newThread = yield channel.threads.create({
-                name: '❌Not Crackable Stuff❌',
+                name: '❌ Not Crackable Stuff ❌',
                 reason: 'Creating a thread for game info and sending message...',
                 message: {
-                    embeds: firstMessageEmbeds
+                    embeds: messageEmbeds[0]
                 }
             });
-            // Store the thread ID and first message ID
             (0, fileUtils_1.setThreadInfo)(newThread.id, ((_a = newThread.firstMessage) === null || _a === void 0 ? void 0 : _a.id) || '');
-            // If there are more embeds for a second message, send it
-            if (secondMessageEmbeds.length > 0) {
-                console.log("neMessage" + newThread.id);
-                yield newThread.send({ embeds: secondMessageEmbeds });
+            // Send additional messages if there are more embeds
+            for (let i = 1; i < messageEmbeds.length; i++) {
+                yield newThread.send({ embeds: messageEmbeds[i] });
             }
         }
         else {
             const existingThread = yield channel.threads.fetch(thread_info.thread_id).catch(() => null);
             if (existingThread) {
-                // Edit the existing message in the thread
-                const message = yield existingThread.messages.fetch({ limit: 100, cache: true }).then((messages) => messages.reduce((oldest, msg) => msg.createdTimestamp < oldest.createdTimestamp ? msg : oldest, messages[0]));
-                if (message) {
-                    yield message.edit({ embeds: firstMessageEmbeds });
-                }
-                // If there's a second message needed, either edit or create a new message
-                if (secondMessageEmbeds.length > 0) {
-                    console.time('fetchAllGames');
-                    const secondMessage = yield existingThread.messages.fetch({ limit: 1, sort: (a, b) => b.createdTimestamp - a.createdTimestamp }).then((messages) => messages.first());
-                    console.timeEnd('fetchAllGames');
-                    if (secondMessage) {
-                        console.log('1');
-                        console.log(secondMessage.id);
-                        yield secondMessage.edit({ embeds: secondMessageEmbeds });
+                // Fetch all bot messages from the thread and edit them
+                const messages = yield existingThread.messages.fetch({ limit: 100 }).then((msgs) => msgs.filter((msg) => { var _a; return msg.author.id === ((_a = client.user) === null || _a === void 0 ? void 0 : _a.id); }).sort((a, b) => a.createdTimestamp - b.createdTimestamp));
+                // Edit existing messages and create new ones if necessary
+                for (let i = 0; i < messageEmbeds.length; i++) {
+                    const message = messages.at(i);
+                    if (message) {
+                        yield message.edit({ embeds: messageEmbeds[i] });
                     }
                     else {
-                        yield existingThread.send({ embeds: secondMessageEmbeds });
+                        yield existingThread.send({ embeds: messageEmbeds[i] });
                     }
+                }
+                // Delete any extra messages that are no longer needed
+                for (let i = messageEmbeds.length; i < messages.size; i++) {
+                    yield ((_b = messages.at(i)) === null || _b === void 0 ? void 0 : _b.delete());
                 }
             }
             else {
                 // If the thread is not found, create a new one
                 const newThread = yield channel.threads.create({
-                    name: '❌Not Crackable Stuff❌',
+                    name: '❌ Not Crackable Stuff ❌',
                     reason: 'Creating a thread for game info and sending message...',
                     message: {
-                        embeds: firstMessageEmbeds
+                        embeds: messageEmbeds[0]
                     }
                 });
-                (0, fileUtils_1.setThreadInfo)(newThread.id, ((_b = newThread.firstMessage) === null || _b === void 0 ? void 0 : _b.id) || '');
-                // If there are more embeds for a second message, send it
-                if (secondMessageEmbeds.length > 0) {
-                    console.log("neMessage" + newThread.id);
-                    yield newThread.send({ embeds: secondMessageEmbeds });
+                (0, fileUtils_1.setThreadInfo)(newThread.id, ((_c = newThread.firstMessage) === null || _c === void 0 ? void 0 : _c.id) || '');
+                // Send any remaining messages
+                for (let i = 1; i < messageEmbeds.length; i++) {
+                    yield newThread.send({ embeds: messageEmbeds[i] });
                 }
             }
         }

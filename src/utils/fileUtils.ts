@@ -35,7 +35,8 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             cracked BOOLEAN NOT NULL,
-            reason TEXT
+            reason TEXT,
+            platform TEXT
         )
     `);
 
@@ -44,7 +45,8 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             cracked BOOLEAN NOT NULL,
-            reason TEXT
+            reason TEXT,
+            platform TEXT
         )
     `);
     db.run(`
@@ -133,13 +135,13 @@ export function fetchAllGames(): Promise<any[]> {
 }
 
 // Create a queue for adding games to the database to reduce the risk of conflicts
-const addGameQueue: Array<{ name: string; cracked: boolean; reason: string | null }> = [];
+const addGameQueue: Array<{ name: string; cracked: boolean; reason: string | null; platform: string }> = [];
 let isAddingGame = false;
 
 // Add a game to the 'games' table
-export function addGameToDatabase(name: string, cracked: boolean, reason: string | null): Promise<void> {
+export function addGameToDatabase(name: string, cracked: boolean, reason: string | null, platform: any): Promise<void> {
     return new Promise((resolve, reject) => {
-        addGameQueue.push({ name, cracked, reason });
+        addGameQueue.push({ name, cracked, reason, platform });
 
         // If no one is currently adding a game, start adding the game now
         if (!isAddingGame) {
@@ -155,8 +157,8 @@ export function addGameToDatabase(name: string, cracked: boolean, reason: string
             }
 
             db.run(
-                `INSERT INTO games (name, cracked, reason) VALUES (?, ?, ?)`,
-                [nextGame.name, nextGame.cracked, nextGame.reason],
+                `INSERT INTO games (name, cracked, reason, platform) VALUES (?, ?, ?, ?)`,
+                [nextGame.name, nextGame.cracked, nextGame.reason, nextGame.platform],
                 (err) => {
                     if (err) {
                         console.error('Error adding game to database:', err);
@@ -222,11 +224,11 @@ export function fetchAllPendingGames(): Promise<any[]> {
 }
 
 // Add a game to the 'pending_games' table
-export function addPendingGameToDatabase(name: string, cracked: boolean, reason: string | null): Promise<void> {
+export function addPendingGameToDatabase(name: string, cracked: boolean, reason: string | null, platform: string): Promise<void> {
     return new Promise((resolve, reject) => {
         db.run(
-            `INSERT INTO pending_games (name, cracked, reason) VALUES (?, ?, ?)`,
-            [name, cracked, reason],
+            `INSERT INTO pending_games (name, cracked, reason, platform) VALUES (?, ?, ?, ?)`,
+            [name, cracked, reason, platform],
             (err) => {
                 if (err) {
                     console.error('Error adding pending game to database:', err);
@@ -263,7 +265,7 @@ export function approvePendingGame(name: string): Promise<void> {
             // Start transaction
             await db.run('BEGIN TRANSACTION');
 
-            await addGameToDatabase(pendingGame.name, pendingGame.cracked, pendingGame.reason);
+            await addGameToDatabase(pendingGame.name, pendingGame.cracked, pendingGame.reason, pendingGame.platform);
             await removePendingGameFromDatabase(name);
 
             // Commit transaction

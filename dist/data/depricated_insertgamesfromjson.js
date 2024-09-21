@@ -19,10 +19,15 @@ fs.readFile(gamesJsonPath, 'utf8', async (err, data) => {
         // Iterate through the games and add them to the database
         for (const game of games) {
             const { name, cracked, reason = null } = game;
+            let platform = null; // Set platform to null by default
+
+            if (game.platform) {
+                platform = game.platform; // If platform exists in the game object, use its value
+            }
 
             try {
                 // Add the game to the database
-                await addGameToDatabase(name, cracked, reason);
+                await addGameToDatabase(name, cracked, reason, platform);
                 console.log(`Successfully added game: ${name}`);
             } catch (dbErr) {
                 console.error(`Error adding game ${name}:`, dbErr);

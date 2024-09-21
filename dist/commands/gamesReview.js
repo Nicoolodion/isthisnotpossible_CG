@@ -47,7 +47,7 @@ const gamesReviewsCommand = {
         const embeds = [];
         let currentDescription = '';
         pendingGames.forEach((game, index) => {
-            const gameDetails = `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}\n\n`;
+            const gameDetails = `**Game:** \`${game.name}\`\n**Cracked:** ${game.cracked ? '✅ Yes' : '❌ No'}${game.reason ? `\n**Reason:** ${game.reason}` : ''}${game.platform ? `\n**Platform:** ${game.platform}` : ''}\n\n`;
             if ((currentDescription + gameDetails).length > MAX_DESCRIPTION_LENGTH) {
                 embeds.push(new discord_js_1.EmbedBuilder().setColor('#0099ff').setTitle(`Pending Games for Review (Page ${embeds.length + 1})`).setDescription(currentDescription).setTimestamp());
                 currentDescription = '';

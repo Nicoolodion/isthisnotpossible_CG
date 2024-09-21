@@ -54,7 +54,8 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             cracked BOOLEAN NOT NULL,
-            reason TEXT
+            reason TEXT,
+            platform TEXT
         )
     `);
     db.run(`
@@ -62,7 +63,8 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             cracked BOOLEAN NOT NULL,
-            reason TEXT
+            reason TEXT,
+            platform TEXT
         )
     `);
     db.run(`
@@ -149,9 +151,9 @@ function fetchAllGames() {
 const addGameQueue = [];
 let isAddingGame = false;
 // Add a game to the 'games' table
-function addGameToDatabase(name, cracked, reason) {
+function addGameToDatabase(name, cracked, reason, platform) {
     return new Promise((resolve, reject) => {
-        addGameQueue.push({ name, cracked, reason });
+        addGameQueue.push({ name, cracked, reason, platform });
         // If no one is currently adding a game, start adding the game now
         if (!isAddingGame) {
             isAddingGame = true;
@@ -163,7 +165,7 @@ function addGameToDatabase(name, cracked, reason) {
                 isAddingGame = false;
                 return;
             }
-            db.run(`INSERT INTO games (name, cracked, reason) VALUES (?, ?, ?)`, [nextGame.name, nextGame.cracked, nextGame.reason], (err) => {
+            db.run(`INSERT INTO games (name, cracked, reason, platform) VALUES (?, ?, ?, ?)`, [nextGame.name, nextGame.cracked, nextGame.reason, nextGame.platform], (err) => {
                 if (err) {
                     console.error('Error adding game to database:', err);
                     reject(err);
@@ -223,9 +225,9 @@ function fetchAllPendingGames() {
     });
 }
 // Add a game to the 'pending_games' table
-function addPendingGameToDatabase(name, cracked, reason) {
+function addPendingGameToDatabase(name, cracked, reason, platform) {
     return new Promise((resolve, reject) => {
-        db.run(`INSERT INTO pending_games (name, cracked, reason) VALUES (?, ?, ?)`, [name, cracked, reason], (err) => {
+        db.run(`INSERT INTO pending_games (name, cracked, reason, platform) VALUES (?, ?, ?, ?)`, [name, cracked, reason, platform], (err) => {
             if (err) {
                 console.error('Error adding pending game to database:', err);
                 reject(err);
@@ -259,7 +261,7 @@ function approvePendingGame(name) {
                 throw new Error('Game not found in pending list');
             // Start transaction
             yield db.run('BEGIN TRANSACTION');
-            yield addGameToDatabase(pendingGame.name, pendingGame.cracked, pendingGame.reason);
+            yield addGameToDatabase(pendingGame.name, pendingGame.cracked, pendingGame.reason, pendingGame.platform);
             yield removePendingGameFromDatabase(name);
             // Commit transaction
             yield db.run('COMMIT');

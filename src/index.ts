@@ -53,6 +53,31 @@ client.once('ready', async () => {
                         type: 3, // String
                         description: 'Reason why the game can\'t be cracked',
                         required: false,
+                    },
+                    {
+                        name: 'platform',
+                        type: 3, // String
+                        description: 'Category of the game/program',
+                        required: false,
+                        choices: [
+                            {
+                                name: 'Games',
+                                value: ''
+                            },
+                            {
+                                name: 'VR',
+                                value: 'VR'
+                            },
+                            {
+                                name: 'Software',
+                                value: 'Software'
+                            },
+                            {
+                                name: 'Other',
+                                value: 'Other'
+                            }
+                        ],
+                        defaultValue: 'games'
                     }
                 ]
             },
