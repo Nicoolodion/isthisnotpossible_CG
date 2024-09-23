@@ -107,9 +107,7 @@ client.once('ready', async () => {
     } catch (error) {
         console.error(error);
     }
-    const startTime = performance.now();
     await createThread(client);
-    console.log(`MessageStart: ${performance.now() - startTime}ms`);
 
 });
 
@@ -127,7 +125,7 @@ client.on('interactionCreate', async interaction => {
         const reason = options.get('reason') ? `${options.get('reason')?.value}` : undefined;
 
 
-        const startTime = performance.now();
+        const start = performance.now();
         if (commandName === 'new-games-add') {
             await newGamesAddCommand.execute(interaction);
             //sortGamesByName();
@@ -140,6 +138,8 @@ client.on('interactionCreate', async interaction => {
             await deleteGamesCommand.execute(interaction);
             await createThread(client);
         }
+        const end = performance.now();
+        console.log(`Command: Responded to interaction in ${end - start}ms`);
 
     } else if (interaction.isButton() || interaction.isSelectMenu()) {
         const { customId, user } = interaction;

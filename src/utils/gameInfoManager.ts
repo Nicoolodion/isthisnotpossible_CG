@@ -11,19 +11,17 @@ let games: any[] = [];
 //TODO: Make UI Better
 //TODO: Set Up VPN on rasbperry to host it
 //TODO: Add multiple messages / Optimize the current
-//TODO: Add Tags or else it won't work!
 
 
+//TODO: Let the other Bot sort this list somehow. Search Steam for game
 //TODO: Make it failsafe?       Should be?
+//TODO: think about using "better-sqlite3"
 
 
 
 const MAX_DESCRIPTION_LENGTH = 4050; // Max length for a single embed description
 const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
-const EXTRA_MESSAGES = parseInt(process.env.EXTRA_MESSAGES || '1'); // Default to 1 if not provided
-
-
 
 
 const platformTitles = {
@@ -81,18 +79,16 @@ function splitEmbedDescription(title: string, description: string): EmbedBuilder
     return embeds;
 }
 
-// Function to split embeds into multiple messages with a configurable number of extra messages
+// Function to split embeds into two messages if the total character count exceeds 6000
 function splitEmbedsIntoMessages(embeds: EmbedBuilder[]): EmbedBuilder[][] {
     const messageEmbeds: EmbedBuilder[][] = [];
     let currentMessage: EmbedBuilder[] = [];
     let totalCharacters = 0;
-    const maxMessages = EXTRA_MESSAGES + 1; // 1 for the main thread message
 
     for (const embed of embeds) {
         const embedLength = embed.data.description?.length || 0;
 
         if (totalCharacters + embedLength > MAX_TOTAL_SIZE || currentMessage.length >= MAX_EMBEDS) {
-            if (messageEmbeds.length >= maxMessages) break; // Stop if max messages reached
             messageEmbeds.push(currentMessage);
             currentMessage = [];
             totalCharacters = 0;
@@ -102,7 +98,7 @@ function splitEmbedsIntoMessages(embeds: EmbedBuilder[]): EmbedBuilder[][] {
         totalCharacters += embedLength;
     }
 
-    if (currentMessage.length > 0 && messageEmbeds.length < maxMessages) {
+    if (currentMessage.length > 0) {
         messageEmbeds.push(currentMessage);
     }
 
@@ -146,8 +142,7 @@ export async function createThread(client: any) {
             reason: 'Creating a thread for game info and sending message...',
             message: {
                 embeds: messageEmbeds[0]
-            },
-            appliedTags: [process.env.TAG_INFO]
+            }
         });
 
         setThreadInfo(newThread.id, newThread.firstMessage?.id || '');
@@ -187,8 +182,7 @@ export async function createThread(client: any) {
                 reason: 'Creating a thread for game info and sending message...',
                 message: {
                     embeds: messageEmbeds[0]
-                },
-                appliedTags: [process.env.TAG_INFO]
+                }
             });
             setThreadInfo(newThread.id, newThread.firstMessage?.id || '');
 
