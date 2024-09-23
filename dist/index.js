@@ -107,7 +107,9 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         console.error(error);
     }
+    const startTime = performance.now();
     yield (0, gameInfoManager_1.createThread)(client);
+    console.log(`MessageStart: ${performance.now() - startTime}ms`);
 }));
 client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
@@ -121,7 +123,7 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             : `\`/${commandName}\``;
         const input = options.get('name') ? `${(_a = options.get('name')) === null || _a === void 0 ? void 0 : _a.value}` : undefined;
         const reason = options.get('reason') ? `${(_b = options.get('reason')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
-        const start = performance.now();
+        const startTime = performance.now();
         if (commandName === 'new-games-add') {
             yield newGamesAdd_1.default.execute(interaction);
             //sortGamesByName();
@@ -136,8 +138,6 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
             yield deleteGamesCommand_1.default.execute(interaction);
             yield (0, gameInfoManager_1.createThread)(client);
         }
-        const end = performance.now();
-        console.log(`Command: Responded to interaction in ${end - start}ms`);
     }
     else if (interaction.isButton() || interaction.isSelectMenu()) {
         const { customId, user } = interaction;

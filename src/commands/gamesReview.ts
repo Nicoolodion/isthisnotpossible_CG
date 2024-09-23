@@ -54,7 +54,11 @@ const gamesReviewsCommand = {
         });
 
         if (currentDescription) {
-            embeds.push(new EmbedBuilder().setColor('#0099ff').setTitle(`Pending Games for Review (Page ${embeds.length + 1})`).setDescription(currentDescription).setTimestamp());
+            if (embeds.length > 0) {
+                embeds.push(new EmbedBuilder().setColor('#0099ff').setTitle(`Pending Games for Review (Page ${embeds.length + 1})`).setDescription(currentDescription).setTimestamp());
+            } else {
+                embeds.push(new EmbedBuilder().setColor('#0099ff').setTitle('Pending Games for Review').setDescription(currentDescription).setTimestamp());
+            }
         }
 
         // Create buttons for approval and removal

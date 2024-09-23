@@ -55,7 +55,12 @@ const gamesReviewsCommand = {
             currentDescription += gameDetails;
         });
         if (currentDescription) {
-            embeds.push(new discord_js_1.EmbedBuilder().setColor('#0099ff').setTitle(`Pending Games for Review (Page ${embeds.length + 1})`).setDescription(currentDescription).setTimestamp());
+            if (embeds.length > 0) {
+                embeds.push(new discord_js_1.EmbedBuilder().setColor('#0099ff').setTitle(`Pending Games for Review (Page ${embeds.length + 1})`).setDescription(currentDescription).setTimestamp());
+            }
+            else {
+                embeds.push(new discord_js_1.EmbedBuilder().setColor('#0099ff').setTitle('Pending Games for Review').setDescription(currentDescription).setTimestamp());
+            }
         }
         // Create buttons for approval and removal
         const approveButton = new discord_js_1.ButtonBuilder()

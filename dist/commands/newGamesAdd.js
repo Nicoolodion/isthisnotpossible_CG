@@ -94,6 +94,7 @@ const newGamesAddCommand = {
             else {
                 yield (0, gameUtils_1.addGame)(newGame);
             }
+            const startTime = performance.now();
             const embed = new discord_js_1.EmbedBuilder()
                 .setColor('#00FF00')
                 .setTitle(`**${hasTeamRole && !hasUploaderOrAdminRole ? 'Game Submitted for Review!' : 'Game Added!'}**`)
@@ -101,6 +102,7 @@ const newGamesAddCommand = {
                 .setFooter({ text: 'Thanks for contributing!' })
                 .setTimestamp();
             yield interaction.reply({ embeds: [embed], ephemeral: true });
+            console.log(`Addtime: ${performance.now() - startTime}ms`);
         }
     }),
     handleInteraction: (interaction) => __awaiter(void 0, void 0, void 0, function* () {
