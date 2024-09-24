@@ -12,17 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortGamesByName = sortGamesByName;
-exports.fetchThreadInfo = fetchThreadInfo;
-exports.setThreadInfo = setThreadInfo;
-exports.fetchAllGames = fetchAllGames;
-exports.addGameToDatabase = addGameToDatabase;
-exports.removeGameFromDatabase = removeGameFromDatabase;
-exports.fetchAllPendingGames = fetchAllPendingGames;
-exports.addPendingGameToDatabase = addPendingGameToDatabase;
-exports.removePendingGameFromDatabase = removePendingGameFromDatabase;
-exports.approvePendingGame = approvePendingGame;
-exports.fetchPendingGameByName = fetchPendingGameByName;
+exports.fetchPendingGameByName = exports.approvePendingGame = exports.removePendingGameFromDatabase = exports.addPendingGameToDatabase = exports.fetchAllPendingGames = exports.removeGameFromDatabase = exports.addGameToDatabase = exports.fetchAllGames = exports.setThreadInfo = exports.fetchThreadInfo = exports.sortGamesByName = void 0;
 const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
 const path_1 = __importDefault(require("path"));
 // Open the SQLite database connection
@@ -73,6 +63,7 @@ function sortGamesByName() {
         console.error('Error sorting games:', err);
     }
 }
+exports.sortGamesByName = sortGamesByName;
 // Fetch the thread_id and message_id from the 'thread_info' table
 function fetchThreadInfo() {
     try {
@@ -84,6 +75,7 @@ function fetchThreadInfo() {
         return null;
     }
 }
+exports.fetchThreadInfo = fetchThreadInfo;
 // Overwrite the thread_id and message_id in the 'thread_info' table
 function setThreadInfo(thread_id, message_id) {
     try {
@@ -96,6 +88,7 @@ function setThreadInfo(thread_id, message_id) {
         console.error('Error setting thread info:', err);
     }
 }
+exports.setThreadInfo = setThreadInfo;
 // Fetch all games from the 'games' table, sorted alphabetically by name (case insensitive)
 function fetchAllGames() {
     try {
@@ -107,6 +100,7 @@ function fetchAllGames() {
         return [];
     }
 }
+exports.fetchAllGames = fetchAllGames;
 // Create a queue for adding games to the database to reduce the risk of conflicts
 const addGameQueue = [];
 let isAddingGame = false;
@@ -125,6 +119,7 @@ function addGameToDatabase(name, cracked, reason, platform) {
         }
     });
 }
+exports.addGameToDatabase = addGameToDatabase;
 function processAddGameQueue() {
     return __awaiter(this, void 0, void 0, function* () {
         const nextGame = addGameQueue.shift();
@@ -157,6 +152,7 @@ function removeGameFromDatabase(name) {
         }
     });
 }
+exports.removeGameFromDatabase = removeGameFromDatabase;
 function processRemoveGameQueue() {
     return __awaiter(this, void 0, void 0, function* () {
         const nextGame = removeGameQueue.shift();
@@ -187,6 +183,7 @@ function fetchAllPendingGames() {
         return [];
     }
 }
+exports.fetchAllPendingGames = fetchAllPendingGames;
 // Add a game to the 'pending_games' table
 function addPendingGameToDatabase(name, cracked, reason, platform) {
     try {
@@ -197,6 +194,7 @@ function addPendingGameToDatabase(name, cracked, reason, platform) {
         console.error('Error adding pending game to database:', err);
     }
 }
+exports.addPendingGameToDatabase = addPendingGameToDatabase;
 // Remove a game from the 'pending_games' table
 function removePendingGameFromDatabase(name) {
     try {
@@ -207,6 +205,7 @@ function removePendingGameFromDatabase(name) {
         console.error('Error removing pending game from database:', err);
     }
 }
+exports.removePendingGameFromDatabase = removePendingGameFromDatabase;
 // Move a pending game to the main games list
 function approvePendingGame(name) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -227,6 +226,7 @@ function approvePendingGame(name) {
         }
     });
 }
+exports.approvePendingGame = approvePendingGame;
 // Fetch a single pending game by name
 function fetchPendingGameByName(name) {
     try {
@@ -238,4 +238,5 @@ function fetchPendingGameByName(name) {
         return null;
     }
 }
+exports.fetchPendingGameByName = fetchPendingGameByName;
 exports.default = db;

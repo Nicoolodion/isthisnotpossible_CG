@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createThread = createThread;
+exports.createThread = void 0;
 const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const fileUtils_1 = require("../utils/fileUtils");
@@ -42,9 +42,7 @@ function splitEmbedDescription(title, description) {
                 .setTitle(`${title} - Part ${embeds.length + 1}`)
                 .setDescription(`${currentDescription}`)
                 .setColor(0x0099ff)
-                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
-            //.setFooter({ text: `----------------------------------------\nLast updated: ${new Date().toLocaleDateString()}` }) // Footer for pagination
-            );
+                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` }));
             currentDescription = '';
             totalCharacters = 0;
         }
@@ -55,13 +53,20 @@ function splitEmbedDescription(title, description) {
         }
     }
     if (currentDescription && embeds.length < MAX_EMBEDS) {
-        embeds.push(new discord_js_1.EmbedBuilder()
-            .setTitle(`${title} - Part ${embeds.length + 1}`)
-            .setDescription(currentDescription)
-            .setColor(0x0099ff)
-            .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
-        //.setFooter({ text: `----------------------------------------\nLast updated: ${new Date().toLocaleDateString()}` }) // Footer for pagination
-        );
+        if (embeds.length > 0) {
+            embeds.push(new discord_js_1.EmbedBuilder()
+                .setTitle(`${title} - Part ${embeds.length + 1}`)
+                .setDescription(currentDescription)
+                .setColor(0x0099ff)
+                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` }));
+        }
+        else {
+            embeds.push(new discord_js_1.EmbedBuilder()
+                .setTitle(title)
+                .setDescription(currentDescription)
+                .setColor(0x0099ff)
+                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` }));
+        }
     }
     return embeds;
 }
@@ -166,3 +171,4 @@ function createThread(client) {
         }
     });
 }
+exports.createThread = createThread;
