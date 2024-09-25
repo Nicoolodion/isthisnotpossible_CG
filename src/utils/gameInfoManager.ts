@@ -7,24 +7,28 @@ config();
 let channel_id = process.env.channel_id;
 let games: any[] = [];
 
-
 const MAX_DESCRIPTION_LENGTH = 4050; // Max length for a single embed description
 const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
 const EXTRA_MESSAGES = parseInt(process.env.EXTRA_MESSAGES || '1'); // Default to 1 if not provided
-
-
-
+const REFRESH_INTERVAL = 1800000; // Auto-refresh thread every 30 minutes (adjust as needed)
 
 const platformTitles = {
     Games: '🎮 Games',
     Software: '💻 Software',
-    VR: ':eyeglasses:  VR',
+    VR: '🕶 VR',
     Other: '🌀 Other',
 };
 
+const platformColors = {
+    Games: 0x00FF00,   // Green for games
+    Software: 0x0000FF, // Blue for software
+    VR: 0x09dee6,      // blueish turkis
+    Other: 0xFFA500,   // Orange for other
+};
+
 // Function to split long descriptions into multiple embeds
-function splitEmbedDescription(title: string, description: string): EmbedBuilder[] {
+function splitEmbedDescription(title: string, description: string, platform: string): EmbedBuilder[] {
     const embeds: EmbedBuilder[] = [];
     let currentDescription = '';
     let totalCharacters = 0;
@@ -39,7 +43,7 @@ function splitEmbedDescription(title: string, description: string): EmbedBuilder
                 new EmbedBuilder()
                     .setTitle(`${title} - Part ${embeds.length + 1}`)
                     .setDescription(`${currentDescription}`)
-                    .setColor(0x0099ff)
+                    .setColor(platformColors[platform as keyof typeof platformColors] || 0x0099ff) // Color customization
                     .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
             );
             currentDescription = '';
@@ -49,31 +53,19 @@ function splitEmbedDescription(title: string, description: string): EmbedBuilder
         currentDescription = currentDescription ? `${currentDescription}\n${formattedLine}` : formattedLine;
         totalCharacters += formattedLine.length + 1;
 
-
         if (totalCharacters >= MAX_TOTAL_SIZE || embeds.length >= MAX_EMBEDS - 1) {
             break;
         }
     }
 
     if (currentDescription && embeds.length < MAX_EMBEDS) {
-
-        if (embeds.length > 0) {
-            embeds.push(
-                new EmbedBuilder()
-                    .setTitle(`${title} - Part ${embeds.length + 1}`)
-                    .setDescription(currentDescription)
-                    .setColor(0x0099ff)
-                    .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
-            );
-        } else {
-            embeds.push(
-                new EmbedBuilder()
-                    .setTitle(title)
-                    .setDescription(currentDescription)
-                    .setColor(0x0099ff)
-                    .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
-            );
-        }
+        embeds.push(
+            new EmbedBuilder()
+                .setTitle(title)
+                .setDescription(currentDescription)
+                .setColor(platformColors[platform as keyof typeof platformColors] || 0x0099ff)
+                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
+        );
     }
 
     return embeds;
@@ -107,20 +99,25 @@ function splitEmbedsIntoMessages(embeds: EmbedBuilder[]): EmbedBuilder[][] {
     return messageEmbeds;
 }
 
+// Auto-refresh functionality
+function autoRefreshThread(client: any) {
+    setInterval(async () => {
+        await createThread(client);
+    }, REFRESH_INTERVAL);
+}
 
-
-export async function createThread(client: any) {
+// Create or update a thread with embed messages
+async function createThread(client: any) {
     const channel = client.channels.cache.get(channel_id);
     let thread_info = await fetchThreadInfo();
     const newGames = await fetchAllGames();
-    if (JSON.stringify(newGames) === JSON.stringify(games)) return;
 
+    if (JSON.stringify(newGames) === JSON.stringify(games)) return;
     games = newGames;
 
     const platforms = ['Games', 'Software', 'VR', 'Other'];
     const platformEmbeds: EmbedBuilder[] = [];
 
-    // Build embeds for each platform
     for (const platform of platforms) {
         const gamesForPlatform = games.filter(game => game.platform === platform || (!game.platform && platform === 'Games'));
 
@@ -129,71 +126,61 @@ export async function createThread(client: any) {
                 game.reason ? `**${game.name}**\n*Reason: ${game.reason}*` : `**${game.name}**`
             ).join('\n\n');
 
-            const platformEmbedDescription = splitEmbedDescription((platformTitles as {[key: string]: string})[platform], gameDescriptions);
+const platformEmbedDescription = splitEmbedDescription(platformTitles[platform as keyof typeof platformTitles], gameDescriptions, platform);
             platformEmbeds.push(...platformEmbedDescription);
         }
     }
 
-    // Split platform embeds across multiple messages
     const messageEmbeds = splitEmbedsIntoMessages(platformEmbeds);
 
     if (!thread_info?.thread_id) {
-        // Create a new thread and send the first message with the initial embeds
-        const newThread = await channel.threads.create({
-            name: '❌ Not Crackable Stuff ❌',
-            reason: 'Creating a thread for game info and sending message...',
-            message: {
-                embeds: messageEmbeds[0]
-            },
-            appliedTags: [process.env.TAG_INFO]
-        });
-
-        setThreadInfo(newThread.id, newThread.firstMessage?.id || '');
-
-        // Send additional messages if there are more embeds
-        for (let i = 1; i < messageEmbeds.length; i++) {
-            await newThread.send({ embeds: messageEmbeds[i] });
-        }
-
+        await createNewThread(channel, client, messageEmbeds);
     } else {
-        const existingThread = await channel.threads.fetch(thread_info.thread_id).catch(() => null);
-        if (existingThread) {
-            // Fetch all bot messages from the thread and edit them
-            const messages = await existingThread.messages.fetch({ limit: 100 }).then((msgs: any[]) =>
-                msgs.filter((msg) => msg.author.id === client.user?.id).sort((a, b) => a.createdTimestamp - b.createdTimestamp)
-            );
-
-            // Edit existing messages and create new ones if necessary
-            for (let i = 0; i < messageEmbeds.length; i++) {
-                const message = messages.at(i);
-                if (message) {
-                    await message.edit({ embeds: messageEmbeds[i] });
-                } else {
-                    await existingThread.send({ embeds: messageEmbeds[i] });
-                }
-            }
-
-            // Delete any extra messages that are no longer needed
-            for (let i = messageEmbeds.length; i < messages.size; i++) {
-                await messages.at(i)?.delete();
-            }
-
-        } else {
-            // If the thread is not found, create a new one
-            const newThread = await channel.threads.create({
-                name: '❌ Not Crackable Stuff ❌',
-                reason: 'Creating a thread for game info and sending message...',
-                message: {
-                    embeds: messageEmbeds[0]
-                },
-                appliedTags: [process.env.TAG_INFO]
-            });
-            setThreadInfo(newThread.id, newThread.firstMessage?.id || '');
-
-            // Send any remaining messages
-            for (let i = 1; i < messageEmbeds.length; i++) {
-                await newThread.send({ embeds: messageEmbeds[i] });
-            }
-        }
+        await updateExistingThread(channel, client, thread_info, messageEmbeds);
     }
 }
+
+async function createNewThread(channel: any, client: any, messageEmbeds: EmbedBuilder[][]) {
+    const newThread = await channel.threads.create({
+        name: '❌ Not Crackable Stuff ❌',
+        reason: 'Creating a thread for game info and sending message...',
+        message: {
+            embeds: messageEmbeds[0],
+        },
+        appliedTags: [process.env.TAG_INFO],
+    });
+
+    setThreadInfo(newThread.id, newThread.firstMessage?.id || '');
+
+    for (let i = 1; i < messageEmbeds.length; i++) {
+        await newThread.send({ embeds: messageEmbeds[i] });
+    }
+
+}
+
+async function updateExistingThread(channel: any, client: any, thread_info: any, messageEmbeds: EmbedBuilder[][]) {
+    const existingThread = await channel.threads.fetch(thread_info.thread_id).catch(() => null);
+    
+    if (existingThread) {
+        const messages = await existingThread.messages.fetch({ limit: 100 }).then((msgs: any[]) =>
+            msgs.filter((msg) => msg.author.id === client.user?.id).sort((a, b) => a.createdTimestamp - b.createdTimestamp)
+        );
+
+        for (let i = 0; i < messageEmbeds.length; i++) {
+            const message = messages.at(i);
+            if (message) {
+                await message.edit({ embeds: messageEmbeds[i] });
+            } else {
+                await existingThread.send({ embeds: messageEmbeds[i] });
+            }
+        }
+
+        for (let i = messageEmbeds.length; i < messages.size; i++) {
+            await messages.at(i)?.delete();
+        }
+    } else {
+        await createNewThread(channel, client, messageEmbeds);
+    }
+}
+
+export { createThread, autoRefreshThread };

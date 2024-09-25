@@ -90,7 +90,7 @@ const newGamesAddCommand = {
                 }
                 const embed = new discord_js_1.EmbedBuilder()
                     .setColor('#FF0000')
-                    .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);
+                    .setDescription(`${alreadyOnListMessage} The Reason has been updated to: \`${reason || 'No reason provided'}\`.`);
                 yield interaction.reply({
                     embeds: [embed],
                     //    components: [row],

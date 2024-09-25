@@ -69,6 +69,7 @@ const newGamesAddCommand = {
 
             //const row = new ActionRowBuilder<ButtonBuilder>()
             //    .addComponents(overrideButton);
+
             if (reason == null) {
                 const embed = new EmbedBuilder()
                 .setColor('#FF0000')
@@ -88,7 +89,7 @@ const newGamesAddCommand = {
 
                 const embed = new EmbedBuilder()
                 .setColor('#FF0000')
-                .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);
+                .setDescription(`${alreadyOnListMessage} The Reason has been updated to: \`${reason || 'No reason provided'}\`.`);
             await interaction.reply({
                 embeds: [embed],
             //    components: [row],
