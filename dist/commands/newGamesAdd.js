@@ -71,15 +71,32 @@ const newGamesAddCommand = {
             //    .setStyle(ButtonStyle.Success);
             //const row = new ActionRowBuilder<ButtonBuilder>()
             //    .addComponents(overrideButton);
-            //TODO: Make this look better
-            const embed = new discord_js_1.EmbedBuilder()
-                .setColor('#FF0000')
-                .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);
-            yield interaction.reply({
-                embeds: [embed],
-                //    components: [row],
-                ephemeral: true
-            });
+            if (reason == null) {
+                const embed = new discord_js_1.EmbedBuilder()
+                    .setColor('#FF0000')
+                    .setDescription(`${alreadyOnListMessage}`);
+                yield interaction.reply({
+                    embeds: [embed],
+                    //    components: [row],
+                    ephemeral: true
+                });
+            }
+            else {
+                if (reason) {
+                    const game = gamesList.find((game) => game.name.toLowerCase() === gameName.toLowerCase());
+                    if (game && !game.reason) {
+                        yield (0, fileUtils_1.updateGameReason)(gameName, reason);
+                    }
+                }
+                const embed = new discord_js_1.EmbedBuilder()
+                    .setColor('#FF0000')
+                    .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);
+                yield interaction.reply({
+                    embeds: [embed],
+                    //    components: [row],
+                    ephemeral: true
+                });
+            }
         }
         else {
             const newGame = {

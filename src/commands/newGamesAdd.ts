@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import { CommandInteraction, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
 import { loadGames, addGame, addPendingGame } from '../utils/gameUtils';
-import { fetchAllPendingGames } from '../utils/fileUtils';
+import { fetchAllPendingGames, updateGameReason } from '../utils/fileUtils';
 
 
 config();
@@ -69,9 +69,24 @@ const newGamesAddCommand = {
 
             //const row = new ActionRowBuilder<ButtonBuilder>()
             //    .addComponents(overrideButton);
+            if (reason == null) {
+                const embed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setDescription(`${alreadyOnListMessage}`);
+            await interaction.reply({
+                embeds: [embed],
+            //    components: [row],
+                ephemeral: true
+            });
+            } else {
+                if (reason) {
+                    const game = gamesList.find((game: any) => game.name.toLowerCase() === gameName.toLowerCase());
+                    if (game && !game.reason) {
+                        await updateGameReason(gameName, reason);
+                    }
+                }
 
-            //TODO: Make this look better
-            const embed = new EmbedBuilder()
+                const embed = new EmbedBuilder()
                 .setColor('#FF0000')
                 .setDescription(`${alreadyOnListMessage} Reason provided: \`${reason || 'No reason provided'}\`.`);
             await interaction.reply({
@@ -79,6 +94,8 @@ const newGamesAddCommand = {
             //    components: [row],
                 ephemeral: true
             });
+            }
+
         } else {
             const newGame = {
                 name: gameName,

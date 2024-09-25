@@ -56,6 +56,16 @@ export function sortGamesByName(): void {
     }
 }
 
+// Update the reason for a specific game
+export function updateGameReason(gameName: string, reason: string | null): void {
+    try {
+        const updateStmt = db.prepare('UPDATE games SET reason = ? WHERE name = ?');
+        updateStmt.run(reason, gameName);
+    } catch (err) {
+        console.error('Error updating game reason:', err);
+    }
+}
+
 // Fetch the thread_id and message_id from the 'thread_info' table
 export function fetchThreadInfo(): { thread_id: string; message_id: string } | null {
     try {

@@ -12,7 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addPendingGame = exports.removeGame = exports.addGame = exports.searchGamesExact = exports.searchGames = exports.loadGames = void 0;
+exports.loadGames = loadGames;
+exports.searchGames = searchGames;
+exports.searchGamesExact = searchGamesExact;
+exports.addGame = addGame;
+exports.removeGame = removeGame;
+exports.addPendingGame = addPendingGame;
 const fuse_js_1 = __importDefault(require("fuse.js"));
 const fileUtils_1 = require("./fileUtils");
 let gamesCache = null; // Cache for games
@@ -32,7 +37,6 @@ function loadGames() {
         return gamesCache;
     });
 }
-exports.loadGames = loadGames;
 function searchGames(name) {
     return __awaiter(this, void 0, void 0, function* () {
         const games = yield loadGames();
@@ -45,7 +49,6 @@ function searchGames(name) {
         return result.map(res => res.item);
     });
 }
-exports.searchGames = searchGames;
 function searchGamesExact(name) {
     return __awaiter(this, void 0, void 0, function* () {
         const games = yield loadGames();
@@ -58,14 +61,12 @@ function searchGamesExact(name) {
         return result.map(res => res.item);
     });
 }
-exports.searchGamesExact = searchGamesExact;
 function addGame(game) {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, fileUtils_1.addGameToDatabase)(game.name, game.cracked, game.reason, game.platform);
         gamesCache = null; // Invalidate cache
     });
 }
-exports.addGame = addGame;
 function removeGame(name) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -79,10 +80,8 @@ function removeGame(name) {
         }
     });
 }
-exports.removeGame = removeGame;
 function addPendingGame(game) {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, fileUtils_1.addPendingGameToDatabase)(game.name, game.cracked, game.reason, game.platform);
     });
 }
-exports.addPendingGame = addPendingGame;

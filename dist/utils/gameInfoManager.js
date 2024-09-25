@@ -9,16 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createThread = void 0;
+exports.createThread = createThread;
 const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const fileUtils_1 = require("../utils/fileUtils");
 (0, dotenv_1.config)();
 let channel_id = process.env.channel_id;
 let games = [];
-//TODO: Make UI Better
-//TODO: Add multiple messages / Optimize the current
-//TODO: Make it failsafe?       Should be?
 const MAX_DESCRIPTION_LENGTH = 4050; // Max length for a single embed description
 const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
@@ -171,4 +168,3 @@ function createThread(client) {
         }
     });
 }
-exports.createThread = createThread;

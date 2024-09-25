@@ -112,7 +112,7 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`MessageStart: ${performance.now() - startTime}ms`);
 }));
 client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c;
+    var _a, _b;
     if (interaction.isCommand()) {
         const { commandName, user, options } = interaction;
         const username = user.username;
@@ -121,8 +121,8 @@ client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0
         const action = showID
             ? `\`/${commandName}\` (ID: ${userId})`
             : `\`/${commandName}\``;
-        const input = options.get('name') ? `${(_b = options.get('name')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
-        const reason = options.get('reason') ? `${(_c = options.get('reason')) === null || _c === void 0 ? void 0 : _c.value}` : undefined;
+        const input = options.get('name') ? `${(_a = options.get('name')) === null || _a === void 0 ? void 0 : _a.value}` : undefined;
+        const reason = options.get('reason') ? `${(_b = options.get('reason')) === null || _b === void 0 ? void 0 : _b.value}` : undefined;
         const startTime = performance.now();
         if (commandName === 'new-games-add') {
             yield newGamesAdd_1.default.execute(interaction);

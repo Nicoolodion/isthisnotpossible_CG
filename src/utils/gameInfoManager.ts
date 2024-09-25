@@ -8,14 +8,6 @@ let channel_id = process.env.channel_id;
 let games: any[] = [];
 
 
-//TODO: Make UI Better
-//TODO: Add multiple messages / Optimize the current
-
-
-//TODO: Make it failsafe?       Should be?
-
-
-
 const MAX_DESCRIPTION_LENGTH = 4050; // Max length for a single embed description
 const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
