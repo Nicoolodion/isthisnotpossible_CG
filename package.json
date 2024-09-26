@@ -13,6 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "@prisma/extension-accelerate": "^1.2.0",
     "axios": "^1.7.7",
     "axios-cookiejar-support": "^5.0.2",
     "better-sqlite3": "^11.3.0",
@@ -23,6 +25,9 @@
     "flexsearch": "^0.7.43",
     "fuse.js": "^7.0.0",
     "node-fetch": "^2.7.0",
+    "pg": "^8.13.0",
+    "prisma": "^5.20.0",
+    "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "tough-cookie": "^4.1.4",
     "tsc": "^2.0.4",

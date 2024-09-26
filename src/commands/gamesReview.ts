@@ -4,6 +4,7 @@ import { checkPermissions } from '../utils/permissions';
 import { fetchAllPendingGames, approvePendingGame, removePendingGameFromDatabase } from '../utils/fileUtils';
 import { createThread } from '../utils/gameInfoManager';
 import { client } from '..';
+import { reloadGameCache } from '../utils/gameUtils';
 
 config();
 
@@ -99,6 +100,7 @@ const gamesReviewsCommand = {
                     ],
                     components: [] 
                 });
+                reloadGameCache()
                 await createThread(client);
             } else if (interaction.customId === 'remove') {
                 const options = pendingGames.map((game: any, index: number) => ({
@@ -124,6 +126,7 @@ const gamesReviewsCommand = {
                     components: [row] 
                 });
             }
+            reloadGameCache()
         } else if (interaction.isStringSelectMenu()) {
             const selectedIndexes = interaction.values.map((value: string) => parseInt(value));
             for (const index of selectedIndexes) {
@@ -139,6 +142,7 @@ const gamesReviewsCommand = {
                 ],
                 components: [] 
             });
+            reloadGameCache()
         }
     }
 };

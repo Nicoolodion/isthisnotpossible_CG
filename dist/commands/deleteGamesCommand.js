@@ -116,6 +116,7 @@ const deleteGamesCommand = {
                     embeds: [new discord_js_1.EmbedBuilder().setColor('#00ff00').setDescription("The selected games have been deleted from the main list.")],
                     components: [],
                 });
+                (0, gameUtils_1.reloadGameCache)();
                 yield (0, gameInfoManager_1.createThread)(index_1.client);
             }
         }

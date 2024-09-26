@@ -1,0 +1,29 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Game {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  cracked  Boolean
+  reason   String?
+  platform String?
+}
+
+model PendingGame {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  cracked  Boolean
+  reason   String?
+  platform String?
+}
+
+model ThreadInfo {
+  thread_id  String @id
+  message_id String
+}

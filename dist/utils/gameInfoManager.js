@@ -14,6 +14,7 @@ exports.autoRefreshThread = autoRefreshThread;
 const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
 const fileUtils_1 = require("../utils/fileUtils");
+const gameUtils_1 = require("./gameUtils");
 (0, dotenv_1.config)();
 let channel_id = process.env.channel_id;
 let games = [];
@@ -101,7 +102,7 @@ function createThread(client) {
     return __awaiter(this, void 0, void 0, function* () {
         const channel = client.channels.cache.get(channel_id);
         let thread_info = yield (0, fileUtils_1.fetchThreadInfo)();
-        const newGames = yield (0, fileUtils_1.fetchAllGames)();
+        const newGames = yield (0, gameUtils_1.loadGames)();
         if (JSON.stringify(newGames) === JSON.stringify(games))
             return;
         games = newGames;

@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { EmbedBuilder } from 'discord.js';
 import { fetchAllGames, fetchThreadInfo, setThreadInfo } from '../utils/fileUtils';
+import { loadGames } from './gameUtils';
 
 config();
 
@@ -110,7 +111,7 @@ function autoRefreshThread(client: any) {
 async function createThread(client: any) {
     const channel = client.channels.cache.get(channel_id);
     let thread_info = await fetchThreadInfo();
-    const newGames = await fetchAllGames();
+    const newGames = await loadGames();
 
     if (JSON.stringify(newGames) === JSON.stringify(games)) return;
     games = newGames;
@@ -149,7 +150,6 @@ async function createNewThread(channel: any, client: any, messageEmbeds: EmbedBu
         },
         appliedTags: [process.env.TAG_INFO],
     });
-
     setThreadInfo(newThread.id, newThread.firstMessage?.id || '');
 
     for (let i = 1; i < messageEmbeds.length; i++) {

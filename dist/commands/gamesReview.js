@@ -15,6 +15,7 @@ const permissions_1 = require("../utils/permissions");
 const fileUtils_1 = require("../utils/fileUtils");
 const gameInfoManager_1 = require("../utils/gameInfoManager");
 const __1 = require("..");
+const gameUtils_1 = require("../utils/gameUtils");
 (0, dotenv_1.config)();
 const MAX_DESCRIPTION_LENGTH = 4096; // Discord limit for description length
 const GAMES_PER_EMBED = 10; // Number of games per embed
@@ -95,6 +96,7 @@ const gamesReviewsCommand = {
                     ],
                     components: []
                 });
+                (0, gameUtils_1.reloadGameCache)();
                 yield (0, gameInfoManager_1.createThread)(__1.client);
             }
             else if (interaction.customId === 'remove') {
@@ -119,6 +121,7 @@ const gamesReviewsCommand = {
                     components: [row]
                 });
             }
+            (0, gameUtils_1.reloadGameCache)();
         }
         else if (interaction.isStringSelectMenu()) {
             const selectedIndexes = interaction.values.map((value) => parseInt(value));
@@ -135,6 +138,7 @@ const gamesReviewsCommand = {
                 ],
                 components: []
             });
+            (0, gameUtils_1.reloadGameCache)();
         }
     })
 };

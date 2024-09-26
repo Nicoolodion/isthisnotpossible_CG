@@ -1,19 +1,11 @@
-import fs from 'fs';
-import path from 'path';
 import Fuse from 'fuse.js';
-import {
-    fetchAllGames,
-    addGameToDatabase,
-    removeGameFromDatabase,
-    fetchAllPendingGames,
-    addPendingGameToDatabase
-} from './fileUtils';
+import { fetchAllGames, addGameToDatabase, removeGameFromDatabase, fetchAllPendingGames, addPendingGameToDatabase } from './fileUtils';
 
 interface Game {
     name: string;
     cracked: boolean;
     reason: string | null;
-    platform: string
+    platform: string;
 }
 
 let gamesCache: Game[] | null = null; // Cache for games
@@ -32,10 +24,14 @@ export async function loadGames(): Promise<Game[]> {
     return gamesCache as Game[];
 }
 
+// Reload the cache from the database
+export async function reloadGameCache(): Promise<void> {
+    gamesCache = null;
+    await loadGames();
+}
 
 export async function searchGames(name: string): Promise<Game[]> {
     const games = await loadGames();
-    // Perform fuzzy search on the loaded games
     const fuse = new Fuse(games, {
         keys: ['name'],
         threshold: 0.2
@@ -47,7 +43,6 @@ export async function searchGames(name: string): Promise<Game[]> {
 
 export async function searchGamesExact(name: string): Promise<Game[]> {
     const games = await loadGames();
-    // Perform fuzzy search on the loaded games
     const fuse = new Fuse(games, {
         keys: ['name'],
         threshold: 0.05

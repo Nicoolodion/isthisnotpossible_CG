@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadGames = loadGames;
+exports.reloadGameCache = reloadGameCache;
 exports.searchGames = searchGames;
 exports.searchGamesExact = searchGamesExact;
 exports.addGame = addGame;
@@ -37,10 +38,16 @@ function loadGames() {
         return gamesCache;
     });
 }
+// Reload the cache from the database
+function reloadGameCache() {
+    return __awaiter(this, void 0, void 0, function* () {
+        gamesCache = null;
+        yield loadGames();
+    });
+}
 function searchGames(name) {
     return __awaiter(this, void 0, void 0, function* () {
         const games = yield loadGames();
-        // Perform fuzzy search on the loaded games
         const fuse = new fuse_js_1.default(games, {
             keys: ['name'],
             threshold: 0.2
@@ -52,7 +59,6 @@ function searchGames(name) {
 function searchGamesExact(name) {
     return __awaiter(this, void 0, void 0, function* () {
         const games = yield loadGames();
-        // Perform fuzzy search on the loaded games
         const fuse = new fuse_js_1.default(games, {
             keys: ['name'],
             threshold: 0.05

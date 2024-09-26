@@ -1,6 +1,6 @@
 import { CommandInteraction, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, EmbedBuilder, Client } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
-import { searchGames, removeGame } from '../utils/gameUtils';
+import { searchGames, removeGame, reloadGameCache } from '../utils/gameUtils';
 import { createThread } from '../utils/gameInfoManager';
 import { client } from '../index';
 
@@ -122,6 +122,7 @@ const deleteGamesCommand = {
                     embeds: [new EmbedBuilder().setColor('#00ff00').setDescription("The selected games have been deleted from the main list.")],
                     components: [],
                 });
+                reloadGameCache()
                 await createThread(client);
             }
         } else if (interaction.isStringSelectMenu()) {

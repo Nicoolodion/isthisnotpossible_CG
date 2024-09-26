@@ -120,6 +120,7 @@ const newGamesAddCommand = {
                 .setTimestamp();
             yield interaction.reply({ embeds: [embed], ephemeral: true });
             console.log(`Addtime: ${performance.now() - startTime}ms`);
+            (0, gameUtils_1.reloadGameCache)();
         }
     }),
     handleInteraction: (interaction) => __awaiter(void 0, void 0, void 0, function* () {

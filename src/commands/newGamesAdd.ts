@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import { CommandInteraction, EmbedBuilder } from 'discord.js';
 import { checkPermissions } from '../utils/permissions';
-import { loadGames, addGame, addPendingGame } from '../utils/gameUtils';
+import { loadGames, addGame, addPendingGame, reloadGameCache } from '../utils/gameUtils';
 import { fetchAllPendingGames, updateGameReason } from '../utils/fileUtils';
 
 
@@ -120,6 +120,7 @@ const newGamesAddCommand = {
                 .setTimestamp()
             await interaction.reply({ embeds: [embed], ephemeral: true });
             console.log(`Addtime: ${performance.now() - startTime}ms`);
+            reloadGameCache()
         }
     },
 
