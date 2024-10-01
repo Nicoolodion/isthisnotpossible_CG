@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { EmbedBuilder } from 'discord.js';
-import { fetchAllGames, fetchThreadInfo, setThreadInfo } from '../utils/fileUtils';
+import { fetchThreadInfo, setThreadInfo } from '../utils/fileUtils';
 import { loadGames } from './gameUtils';
 
 config();
@@ -45,7 +45,7 @@ function splitEmbedDescription(title: string, description: string, platform: str
                     .setTitle(`${title} - Part ${embeds.length + 1}`)
                     .setDescription(`${currentDescription}`)
                     .setColor(platformColors[platform as keyof typeof platformColors] || 0x0099ff) // Color customization
-                    .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
+                    .setFooter({ text: `Last updated: ${new Date().toLocaleDateString().replace(/\./g, '/')} ` })
             );
             currentDescription = '';
             totalCharacters = 0;
@@ -65,7 +65,7 @@ function splitEmbedDescription(title: string, description: string, platform: str
                 .setTitle(title)
                 .setDescription(currentDescription)
                 .setColor(platformColors[platform as keyof typeof platformColors] || 0x0099ff)
-                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` })
+                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString().replace(/\./g, '/')} ` })
         );
     }
 

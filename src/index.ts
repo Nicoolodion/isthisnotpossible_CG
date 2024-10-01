@@ -21,9 +21,6 @@ const client = new Client({
 });
 
 
-// TODO: Maybe delete this and other variable call
-const showID = process.env.show_ID === 'true';
-
 client.once('ready', async () => {
     console.log('Bot is online!');
 
@@ -119,12 +116,6 @@ client.on('interactionCreate', async interaction => {
         const username = user.username;
         const userId = user.id;
 
-        // Format the action and input for the embed
-        const action = showID
-            ? `\`/${commandName}\` (ID: ${userId})`
-            : `\`/${commandName}\``;
-        const input = options.get('name') ? `${options.get('name')?.value}` : undefined;
-        const reason = options.get('reason') ? `${options.get('reason')?.value}` : undefined;
 
 
         const startTime = performance.now();

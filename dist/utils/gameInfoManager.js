@@ -48,7 +48,7 @@ function splitEmbedDescription(title, description, platform) {
                 .setTitle(`${title} - Part ${embeds.length + 1}`)
                 .setDescription(`${currentDescription}`)
                 .setColor(platformColors[platform] || 0x0099ff) // Color customization
-                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` }));
+                .setFooter({ text: `Last updated: ${new Date().toLocaleDateString().replace(/\./g, '/')} ` }));
             currentDescription = '';
             totalCharacters = 0;
         }
@@ -63,7 +63,7 @@ function splitEmbedDescription(title, description, platform) {
             .setTitle(title)
             .setDescription(currentDescription)
             .setColor(platformColors[platform] || 0x0099ff)
-            .setFooter({ text: `Last updated: ${new Date().toLocaleDateString()}` }));
+            .setFooter({ text: `Last updated: ${new Date().toLocaleDateString().replace(/\./g, '/')} ` }));
     }
     return embeds;
 }
