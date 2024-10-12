@@ -13,6 +13,7 @@ const MAX_TOTAL_SIZE = 6000; // Max total size for all embeds combined
 const MAX_EMBEDS = 10; // Maximum number of embeds per message
 const EXTRA_MESSAGES = parseInt(process.env.EXTRA_MESSAGES || '1'); // Default to 1 if not provided
 const REFRESH_INTERVAL = 1800000; // Auto-refresh thread every 30 minutes (adjust as needed)
+//const REFRESH_INTERVAL = 3000; // Auto-refresh thread every 1 minute (adjust as needed)
 
 const platformTitles = {
     Games: '🎮 Games',

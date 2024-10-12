@@ -107,6 +107,7 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
     }
     const startTime = performance.now();
     yield (0, gameInfoManager_1.createThread)(client);
+    //autoRefreshThread(client);
     console.log(`MessageStart: ${performance.now() - startTime}ms`);
 }));
 client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0, function* () {

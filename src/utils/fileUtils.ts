@@ -54,8 +54,7 @@ export async function setThreadInfo(thread_id: string, message_id: string): Prom
 export async function fetchAllGames(): Promise<any[]> {
     try {
         const games = await prisma.game.findMany({
-            orderBy: { name: 'asc' }
-        });
+            orderBy: { name: 'asc'  }        });
         return games;
     } catch (err) {
         console.error('Error fetching games:', err);
@@ -93,10 +92,10 @@ export async function removeGameFromDatabase(name: string): Promise<void> {
 // Fetch all pending games from the 'pending_games' table
 export async function fetchAllPendingGames(): Promise<any[]> {
     try {
-        const pendingGames = await prisma.pendingGame.findMany();
-        return pendingGames;
-    } catch (err) {
-        console.error('Error fetching pending games:', err);
+      const pendingGames = await prisma.pendingGame.findMany();
+      return pendingGames;
+    } catch (error) {
+        console.error('Error fetching games out of the pending games table')
         return [];
     }
 }

@@ -4,7 +4,7 @@ import { Client, GatewayIntentBits, REST, Routes, TextChannel, EmbedBuilder, Int
 import newGamesAddCommand from './commands/newGamesAdd';
 import gamesReviewsCommand from './commands/gamesReview';
 import deleteGamesCommand from './commands/deleteGamesCommand';
-import { createThread } from './utils/gameInfoManager';
+import { autoRefreshThread, createThread } from './utils/gameInfoManager';
 
 config();
 
@@ -106,6 +106,7 @@ client.once('ready', async () => {
     }
     const startTime = performance.now();
     await createThread(client);
+    //autoRefreshThread(client);
     console.log(`MessageStart: ${performance.now() - startTime}ms`);
 
 });

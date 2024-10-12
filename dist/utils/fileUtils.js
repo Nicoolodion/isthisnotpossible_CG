@@ -136,8 +136,8 @@ function fetchAllPendingGames() {
             const pendingGames = yield db_1.default.pendingGame.findMany();
             return pendingGames;
         }
-        catch (err) {
-            console.error('Error fetching pending games:', err);
+        catch (error) {
+            console.error('Error fetching games out of the pending games table');
             return [];
         }
     });
