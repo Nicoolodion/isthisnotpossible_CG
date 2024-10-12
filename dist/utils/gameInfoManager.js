@@ -13,7 +13,7 @@ exports.createThread = createThread;
 exports.autoRefreshThread = autoRefreshThread;
 const dotenv_1 = require("dotenv");
 const discord_js_1 = require("discord.js");
-const fileUtils_1 = require("../utils/fileUtils");
+const fileUtils_1 = require("./fileUtils");
 const gameUtils_1 = require("./gameUtils");
 (0, dotenv_1.config)();
 let channel_id = process.env.channel_id;

@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { EmbedBuilder } from 'discord.js';
-import { fetchThreadInfo, setThreadInfo } from '../utils/fileUtils';
+import { fetchThreadInfo, setThreadInfo } from './fileUtils';
 import { loadGames } from './gameUtils';
 
 config();
