@@ -16,7 +16,7 @@ const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
 const path_1 = __importDefault(require("path"));
 const db_1 = __importDefault(require("./db")); // Import your Prisma client
 // Open the SQLite database connection
-const dbPath = path_1.default.resolve(__dirname, './data/games.db');
+const dbPath = path_1.default.resolve(__dirname, './games.db');
 const oldDb = new better_sqlite3_1.default(dbPath, {});
 // Initialize the tables and indexes for games if not already set
 try {

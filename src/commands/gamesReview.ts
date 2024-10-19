@@ -28,6 +28,8 @@ const gamesReviewsCommand = {
             return;
         }
 
+        reloadGameCache()
+
         const pendingGames = await fetchAllPendingGames(); // Fetch pending games from DB
 
         if (pendingGames.length === 0) {

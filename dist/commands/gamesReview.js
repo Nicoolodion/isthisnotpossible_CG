@@ -35,6 +35,7 @@ const gamesReviewsCommand = {
             yield interaction.reply({ embeds: [embed], ephemeral: true });
             return;
         }
+        (0, gameUtils_1.reloadGameCache)();
         const pendingGames = yield (0, fileUtils_1.fetchAllPendingGames)(); // Fetch pending games from DB
         if (pendingGames.length === 0) {
             const embed = new discord_js_1.EmbedBuilder()

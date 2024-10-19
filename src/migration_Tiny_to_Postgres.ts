@@ -3,7 +3,7 @@ import path from 'path';
 import prisma from './db';  // Import your Prisma client
 
 // Open the SQLite database connection
-const dbPath = path.resolve(__dirname, './data/games.db');
+const dbPath = path.resolve(__dirname, './games.db');
 const oldDb = new Database(dbPath, {});
 
 // Initialize the tables and indexes for games if not already set

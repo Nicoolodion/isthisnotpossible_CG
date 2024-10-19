@@ -8,6 +8,7 @@ import { autoRefreshThread, createThread } from './utils/gameInfoManager';
 
 config();
 
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
